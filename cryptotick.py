@@ -324,8 +324,7 @@ def main():
             if (time.time() - lastcoinfetch > float(config['ticker']['updatefrequency'])) or (datapulled==False):
                 lastcoinfetch=fullupdate()
                 datapulled = True
-                # Moved due to suspicion that button pressing was corrupting config file
-                configwrite()                  
+            
 
 if __name__ == '__main__':
     main()
