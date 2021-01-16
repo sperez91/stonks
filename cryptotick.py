@@ -15,7 +15,7 @@ import re
 import logging
 import os
 dirname = os.path.dirname(__file__)
-
+configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
 
 
 def print_system_info(display):
@@ -27,6 +27,176 @@ def print_system_info(display):
     print('  firmware version: {}'.format(epd.firmware_version))
     print('  LUT version: {}'.format(epd.lut_version))
     print()
+
+def beanaproblem(message):
+#   A visual cue that the wheels have fallen off
+    thebean = Image.open(os.path.join(picdir,'thebean.bmp'))
+    epd = epd2in7.EPD()
+    epd.Init_4Gray()
+    image = Image.new('L', (epd.height, epd.width), 255)    # 255: clear the image with white
+    draw = ImageDraw.Draw(image)
+    image.paste(thebean, (60,15))
+    draw.text((15,150),message, font=font_date,fill = 0)
+    image = ImageOps.mirror(image)
+    epd.display_4Gray(epd.getbuffer_4Gray(image))
+#   Reload last good config.yaml
+    with open(configfile) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+
+def getData(config):
+    """
+    The function to update the ePaper display. There are two versions of the layout. One for portrait aspect ratio, one for landscape.
+    """
+    logging.info("Getting Data")
+    days_ago=int(config['ticker']['sparklinedays'])   
+    endtime = int(time.time())
+    starttime = endtime - 60*60*24*days_ago
+    starttimeseconds = starttime
+    endtimeseconds = endtime     
+    # Get the price 
+
+    if config['ticker']['exchange']=='default' or fiat!='usd':
+        geckourl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency="+fiat+"&ids="+whichcoin
+        logging.info(geckourl)
+        rawlivecoin = requests.get(geckourl).json()
+        logging.info(rawlivecoin[0])   
+        liveprice = rawlivecoin[0]
+        pricenow= float(liveprice['current_price'])
+    else:
+        geckourl= "https://api.coingecko.com/api/v3/exchanges/"+config['ticker']['exchange']+"/tickers?coin_ids="+whichcoin+"&include_exchange_logo=false"
+        logging.info(geckourl)
+        rawlivecoin = requests.get(geckourl).json()
+        liveprice= rawlivecoin['tickers'][0]
+        if  liveprice['target']!='USD':
+            logging.info("The exhange is not listing in USD, misconfigured - shutting down script")
+            message="Misconfiguration Problem"
+            beanaproblem(message)
+            sys.exit()
+        pricenow= float(liveprice['last'])
+    logging.info("Got Live Data From CoinGecko")
+    geckourlhistorical = "https://api.coingecko.com/api/v3/coins/"+whichcoin+"/market_chart/range?vs_currency="+fiat+"&from="+str(starttimeseconds)+"&to="+str(endtimeseconds)
+    logging.info(geckourlhistorical)
+    rawtimeseries = requests.get(geckourlhistorical).json()
+    logging.info("Got price for the last "+str(days_ago)+" days from CoinGecko")
+    timeseriesarray = rawtimeseries['prices']
+    timeseriesstack = []
+    length=len (timeseriesarray)
+    i=0
+    while i < length:
+        timeseriesstack.append(float (timeseriesarray[i][1]))
+        i+=1
+
+    timeseriesstack.append(pricenow)
+    return timeseriesstack
+
+def makeSpark(pricestack):
+    # Draw and save the sparkline that represents historical data
+
+    # Subtract the mean from the sparkline to make the mean appear on the plot (it's really the x axis)    
+    x = pricestack-np.mean(pricestack)
+
+    fig, ax = plt.subplots(1,1,figsize=(10,3))
+    plt.plot(x, color='k', linewidth=6)
+    plt.plot(len(x)-1, x[-1], color='r', marker='o')
+
+    # Remove the Y axis
+    for k,v in ax.spines.items():
+        v.set_visible(False)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.axhline(c='k', linewidth=4, linestyle=(0, (5, 2, 1, 2)))
+
+    # Save the resulting bmp file to the images directory
+    plt.savefig(os.path.join(picdir,'spark.png'), dpi=17)
+    imgspk = Image.open(os.path.join(picdir,'spark.png'))
+    file_out = os.path.join(picdir,'spark.bmp')
+    imgspk.save(file_out) 
+    plt.clf() # Close plot to prevent memory error
+
+
+def updateDisplay(config,pricestack):
+    """   
+    Takes the price data, the desired coin/fiat combo along with the config info for formatting
+    if config is re-written following adustment we could avoid passing the last two arguments as
+    they will just be the first two items of their string in config 
+    """
+    days_ago=int(config['ticker']['sparklinedays'])   
+    symbolstring=currency.symbol(fiat.upper())
+    if fiat=="jpy":
+        symbolstring="¥"
+    pricenow = pricestack[-1]
+    currencythumbnail= 'currency/'+whichcoin+'.bmp'
+    tokenfilename = os.path.join(picdir,currencythumbnail)
+    sparkbitmap = Image.open(os.path.join(picdir,'spark.bmp'))
+#   Check for token image, if there isn't one, get on off coingecko, resize it and pop it on a white background
+    if os.path.isfile(tokenfilename):
+        logging.info("Getting token Image from Image directory")
+        tokenimage = Image.open(tokenfilename)
+    else:
+        logging.info("Getting token Image from Coingecko")
+        tokenimageurl = "https://api.coingecko.com/api/v3/coins/"+whichcoin+"?tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false"
+        rawimage = requests.get(tokenimageurl).json()
+        tokenimage = Image.open(requests.get(rawimage['image']['large'], stream=True).raw)
+        resize = 100,100
+        tokenimage.thumbnail(resize, Image.ANTIALIAS)
+        new_image = Image.new("RGBA", (120,120), "WHITE") # Create a white rgba background with a 10 pizel border
+        new_image.paste(tokenimage, (10, 10), tokenimage)   
+        tokenimage=new_image
+        tokenimage.thumbnail((100,100),Image.ANTIALIAS)
+        tokenimage.save(tokenfilename)
+
+
+    pricechange = str("%+d" % round((pricestack[-1]-pricestack[0])/pricestack[-1]*100,2))+"%"
+    if pricenow > 1000:
+        pricenowstring =format(int(pricenow),",")
+    else:
+        pricenowstring =str(float('%.5g' % pricenow))
+
+    if config['display']['orientation'] == 0 or config['display']['orientation'] == 180 :
+        epd = epd2in7.EPD()
+        epd.Init_4Gray()
+        image = Image.new('L', (epd.width, epd.height), 255)    # 255: clear the image with white
+        draw = ImageDraw.Draw(image)              
+        draw.text((110,80),str(days_ago)+"day :",font =font_date,fill = 0)
+        draw.text((110,95),pricechange,font =font_date,fill = 0)
+        # Print price to 5 significant figures
+        draw.text((15,200),symbolstring+pricenowstring,font =font,fill = 0)
+        draw.text((10,10),str(time.strftime("%H:%M %a %d %b %Y")),font =font_date,fill = 0)
+        image.paste(tokenimage, (10,25))
+        image.paste(sparkbitmap,(10,125))
+        if config['display']['orientation'] == 180 :
+            image=image.rotate(180, expand=True)
+
+
+    if config['display']['orientation'] == 90 or config['display']['orientation'] == 270 :
+        epd = epd2in7.EPD()
+        epd.Init_4Gray()
+        image = Image.new('L', (epd.height, epd.width), 255)    # 255: clear the image with white
+        draw = ImageDraw.Draw(image)   
+        draw.text((110,90),str(days_ago)+"day : "+pricechange,font =font_date,fill = 0)
+        # Print price to 5 significant figures
+ #       draw.text((20,120),symbolstring,font =fonthiddenprice,fill = 0)
+        draw.text((10,120),symbolstring+pricenowstring,font =fontHorizontal,fill = 0)
+        image.paste(sparkbitmap,(80,40))
+        image.paste(tokenimage, (0,10))
+        draw.text((95,15),str(time.strftime("%H:%M %a %d %b %Y")),font =font_date,fill = 0)
+        if config['display']['orientation'] == 270 :
+            image=image.rotate(180, expand=True)
+#       This is a hack to deal with the mirroring that goes on in 4Gray Horizontal
+        image = ImageOps.mirror(image)
+
+#   If the display is inverted, invert the image usinng ImageOps        
+    if config['display']['inverted'] == True:
+        image = ImageOps.invert(image)
+#   Send the image to the screen        
+    epd.display_4Gray(epd.getbuffer_4Gray(image))
+    epd.sleep()
+
+def currencystringtolist(currstring):
+    # Takes the string for currencies in the config.yaml file and turns it into a list
+    curr_list = currstring.split(",")
+    curr_list = [x.strip(' ') for x in curr_list]
+    return curr_list
 
 def _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-Regular"):
     '''
@@ -62,43 +232,6 @@ def clear_display(display):
     print('Clearing display...')
     display.clear()
 
-def newyorkercartoon(img):
-    print("Get a Cartoon")
-    d = feedparser.parse('https://www.newyorker.com/feed/cartoons/daily-cartoon')
-    caption=d.entries[0].summary
-    imagedeets = d.entries[0].media_thumbnail[0]
-    imframe = Image.open(requests.get(imagedeets['url'], stream=True).raw)
-    resize = 1200,800
-    imframe.thumbnail(resize)
-    imwidth, imheight = imframe.size
-    xvalue= int(1448/2-imwidth/2)
-    img.paste(imframe,(xvalue, 75))
-    fontstring="Forum-Regular"
-    y_text= 390
-    height= 50
-    width= 50
-    fontsize=60
-    img=writewrappedlines(img,caption,fontsize,y_text,height, width,fontstring)
-    return img
-
-def guardianheadlines(img):
-    print("Get the Headlines")
-
-    d = feedparser.parse('https://www.theguardian.com/uk/rss')
-    filename = os.path.join(dirname, 'images/guardianlogo.jpg')
-    imlogo = Image.open(filename)
-    resize = 800,150
-    imlogo.thumbnail(resize)
-    img.paste(imlogo,(100, 100))
-    text=d.entries[0].title
-    fontstring="Merriweather-Light"
-    y_text=-200
-    height= 140
-    width= 27
-    fontsize=90
-    img=writewrappedlines(img,text,fontsize,y_text,height, width,fontstring)
-
-    return img
 
 def nth_repl(s, sub, repl, n):
     find = s.find(sub)
@@ -117,98 +250,6 @@ def nth_repl(s, sub, repl, n):
 def by_size(words, size):
     return [word for word in words if len(word) <= size]
 
-def wordaday(img):
-    print("get word a day")
-
-    d = feedparser.parse('https://wordsmith.org/awad/rss1.xml')
-    wad = d.entries[0].title
-    fontstring="Forum-Regular"
-    y_text=-200
-    height= 110
-    width= 27
-    fontsize=180
-    img=writewrappedlines(img,wad,fontsize,y_text,height, width,fontstring)
-    wadsummary= d.entries[0].summary
-    fontstring="GoudyBookletter1911-Regular"
-    y_text=0
-    height= 80
-    width= 40
-    fontsize=70
-    img=writewrappedlines(img,wadsummary,fontsize,y_text,height, width,fontstring)
-    return img
-
-def socialmetrics(img):
-    print("get social metrics")
-    return img
-
-def redditquotes(img):
-    print("get reddit quotes")
-    quoteurl = 'https://www.reddit.com/r/quotes/top/.json?t=day&limit=100'
-    rawquotes = requests.get(quoteurl,headers={'User-agent': 'Chrome'}).json()
-    quotestack = []
-    i=0
-    try:
-        length= len(rawquotes['data']['children'])
-        while i < length:
-            quotestack.append(str(rawquotes['data']['children'][i]['data']['title']))
-            i+=1
-        for key in rawquotes.keys():
-            print(key)
-    except:
-        print('Reddit Does Not Like You')
-
-#   Tidy quotes
-    i=0
-    while i<len(quotestack):
-        result = unicodedata.normalize('NFKD', quotestack[i]).encode('ascii', 'ignore')
-        quotestack[i]=result.decode()
-        i+=1
-    quotestack = by_size(quotestack, 140)
-    
-    while True:
-        quote=random.choice (quotestack)
-    #   Replace rancypants quotes with vanilla quotes
-        quote=re.sub("“", "\"", quote)
-        quote=re.sub("”", "\"", quote)
-        string = quote
-        count = quote.count("\"")
-        print("Count="+str(count))
-        if count >= 2:
-            print("2 or more quotes - split after last one")
-            sub = "\""
-            wanted = "\" ~"
-            n = count
-            quote=nth_repl(quote, sub, wanted, n)
-            print(quote)
-
-        quote= re.sub("\s+\"\s+", "\"", quote)
-        quote= re.sub("~|-|—|―", "--", quote)
-
-
-        splitquote = quote.split("--")
-        quote = splitquote[0]
-
-        quote = quote.strip()
-        quote = quote.strip("\"")
-        quote = quote.strip()
-
-        if splitquote[-1]!=splitquote[0] and len(splitquote[-1])<=20:
-            fontstring = "JosefinSans-Light"
-            y_text= -300
-            height= 110
-            width= 27
-            fontsize=100
-            img=writewrappedlines(img,quote,fontsize,y_text,height, width,fontstring)
-            source = splitquote[-1]
-            source = source.strip()
-            print(source)
-            draw = ImageDraw.Draw(img) 
-            draw.line((500,820, 948,820), fill=128, width=3)
-#           _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-Regular"):
-            _place_text(img,source,0,390,80,"JosefinSans-Light")
-            break
-
-    return img
 
 def display_image_8bpp(display, img):
 
@@ -232,9 +273,28 @@ def parse_args():
 
 def main():
 
-    args = parse_args()
+    def fullupdate():
+        """  
+        The steps required for a full update of the display
+        Earlier versions of the code didn't grab new data for some operations
+        but the e-Paper is too slow to bother the coingecko API 
+        """
+        try:
+            pricestack=getData(config)
+            # generate sparkline
+            makeSpark(pricestack)
+            # update display
+            updateDisplay(config, pricestack)
+            lastgrab=time.time()
+            time.sleep(.2)
+        except Exception as e:
+            message="Data pull/print problem"
+            beanaproblem(str(e))
+            time.sleep(10)
+            lastgrab=lastcoinfetch
+        return lastgrab
 
-    tests = []
+    args = parse_args()
 
     if not args.virtual:
         from IT8951.display import AutoEPDDisplay
@@ -252,13 +312,20 @@ def main():
     else:
         from IT8951.display import VirtualEPDDisplay
         display = VirtualEPDDisplay(dims=(800, 600), rotate=args.rotate)
-    print_system_info(display)
-    my_list = [redditquotes,wordaday, newyorkercartoon, guardianheadlines]
-    clear_display(display)
-    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-    img=random.choice(my_list)(img)
-    display_image_8bpp(display,img)
-    print('Done!')
+    
+
+#   Get the configuration from config.yaml
+    with open(configfile) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    datapulled=False
+    lastcoinfetch = time.time()
+    while True:
+        if internet():
+            if (time.time() - lastcoinfetch > float(config['ticker']['updatefrequency'])) or (datapulled==False):
+                lastcoinfetch=fullupdate()
+                datapulled = True
+                # Moved due to suspicion that button pressing was corrupting config file
+                configwrite()                  
 
 if __name__ == '__main__':
     main()
