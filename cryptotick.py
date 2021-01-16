@@ -48,10 +48,9 @@ def print_system_info(display):
     print('  LUT version: {}'.format(epd.lut_version))
     print()
 
-def beanaproblem(message):
+def beanaproblem(image,message):
 #   A visual cue that the wheels have fallen off
     thebean = Image.open(os.path.join(picdir,'thebean.bmp'))
-    image = Image.new('L', (epd.height, epd.width), 255)    # 255: clear the image with white
     draw = ImageDraw.Draw(image)
     image.paste(thebean, (60,15))
     draw.text((15,150),message, font=font_date,fill = 0)
@@ -74,6 +73,7 @@ def getData(config):
     crypto_list = currencystringtolist(config['ticker']['currency'])
     fiat_list=currencystringtolist(config['ticker']['fiatcurrency'])
     fiat=fiat_list[0]
+    print(fiat)
     logging.info("Getting Data")
     days_ago=int(config['ticker']['sparklinedays'])   
     endtime = int(time.time())
@@ -82,24 +82,14 @@ def getData(config):
     endtimeseconds = endtime     
     # Get the price 
     for whichcoin in crypto_list:
-        if config['ticker']['exchange']=='default' or fiat!='usd':
-            geckourl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency="+fiat+"&ids="+whichcoin
-            logging.info(geckourl)
-            rawlivecoin = requests.get(geckourl).json()
-            logging.info(rawlivecoin[0])   
-            liveprice = rawlivecoin[0]
-            pricenow= float(liveprice['current_price'])
-        else:
-            geckourl= "https://api.coingecko.com/api/v3/exchanges/"+config['ticker']['exchange']+"/tickers?coin_ids="+whichcoin+"&include_exchange_logo=false"
-            logging.info(geckourl)
-            rawlivecoin = requests.get(geckourl).json()
-            liveprice= rawlivecoin['tickers'][0]
-            if  liveprice['target']!='USD':
-                logging.info("The exhange is not listing in USD, misconfigured - shutting down script")
-                message="Misconfiguration Problem"
-                beanaproblem(message)
-                sys.exit()
-            pricenow= float(liveprice['last'])
+        print(whichcoin)
+        geckourl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency="+fiat+"&ids="+whichcoin
+        print(geckourl)
+        rawlivecoin = requests.get(geckourl).json()
+        logging.info(rawlivecoin[0])   
+        liveprice = rawlivecoin[0]
+        pricenow= float(liveprice['current_price'])
+        pricenow= float(liveprice['last'])
         logging.info("Got Live Data From CoinGecko")
         geckourlhistorical = "https://api.coingecko.com/api/v3/coins/"+whichcoin+"/market_chart/range?vs_currency="+fiat+"&from="+str(starttimeseconds)+"&to="+str(endtimeseconds)
         logging.info(geckourlhistorical)
@@ -314,16 +304,18 @@ def main():
         but the e-Paper is too slow to bother the coingecko API 
         """
         try:
+            print("FULL UPDATE")
             allprices=getData(config)
             # generate sparkline
 #           makeSpark(allprices)
             # update display
 #           updateDisplay(config, allprices)
+            print(allprices)
             lastgrab=time.time()
             time.sleep(.2)
         except Exception as e:
             message="Data pull/print problem"
-            pic = beanaproblem(str(e))
+            pic = beanaproblem(img,str(e))
             display_image_8bpp(display, pic)
             time.sleep(10)
             lastgrab=lastcoinfetch
@@ -348,7 +340,7 @@ def main():
         from IT8951.display import VirtualEPDDisplay
         display = VirtualEPDDisplay(dims=(800, 600), rotate=args.rotate)
     
-
+    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
 #   Get the configuration from config.yaml
     with open(configfile) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
