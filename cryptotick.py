@@ -14,8 +14,28 @@ import unicodedata
 import re
 import logging
 import os
+import yaml 
+import time
+import socket
+
 dirname = os.path.dirname(__file__)
 configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
+picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'images')
+
+
+def internet(host="8.8.8.8", port=53, timeout=3):
+    """
+    Host: 8.8.8.8 (google-public-dns-a.google.com)
+    OpenPort: 53/tcp
+    Service: domain (DNS/TCP)
+    """
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        return True
+    except socket.error as ex:
+        logging.info("No internet")
+        return False
 
 
 def print_system_info(display):
@@ -31,22 +51,29 @@ def print_system_info(display):
 def beanaproblem(message):
 #   A visual cue that the wheels have fallen off
     thebean = Image.open(os.path.join(picdir,'thebean.bmp'))
-    epd = epd2in7.EPD()
-    epd.Init_4Gray()
     image = Image.new('L', (epd.height, epd.width), 255)    # 255: clear the image with white
     draw = ImageDraw.Draw(image)
     image.paste(thebean, (60,15))
     draw.text((15,150),message, font=font_date,fill = 0)
     image = ImageOps.mirror(image)
-    epd.display_4Gray(epd.getbuffer_4Gray(image))
-#   Reload last good config.yaml
-    with open(configfile) as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
+    return image 
+
+def display_image_8bpp(display, img):
+    dims = (display.width, display.height)
+    img.thumbnail(dims)
+    paste_coords = [dims[i] - img.size[i] for i in (0,1)]  # align image with bottom of display
+    img=img.rotate(180, expand=True)
+    display.frame_buf.paste(img, paste_coords)
+    display.draw_full(constants.DisplayModes.GC16)
+
 
 def getData(config):
     """
     The function to update the ePaper display. There are two versions of the layout. One for portrait aspect ratio, one for landscape.
     """
+    crypto_list = currencystringtolist(config['ticker']['currency'])
+    fiat_list=currencystringtolist(config['ticker']['fiatcurrency'])
+    fiat=fiat_list[0]
     logging.info("Getting Data")
     days_ago=int(config['ticker']['sparklinedays'])   
     endtime = int(time.time())
@@ -54,40 +81,41 @@ def getData(config):
     starttimeseconds = starttime
     endtimeseconds = endtime     
     # Get the price 
+    for whichcoin in crypto_list:
+        if config['ticker']['exchange']=='default' or fiat!='usd':
+            geckourl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency="+fiat+"&ids="+whichcoin
+            logging.info(geckourl)
+            rawlivecoin = requests.get(geckourl).json()
+            logging.info(rawlivecoin[0])   
+            liveprice = rawlivecoin[0]
+            pricenow= float(liveprice['current_price'])
+        else:
+            geckourl= "https://api.coingecko.com/api/v3/exchanges/"+config['ticker']['exchange']+"/tickers?coin_ids="+whichcoin+"&include_exchange_logo=false"
+            logging.info(geckourl)
+            rawlivecoin = requests.get(geckourl).json()
+            liveprice= rawlivecoin['tickers'][0]
+            if  liveprice['target']!='USD':
+                logging.info("The exhange is not listing in USD, misconfigured - shutting down script")
+                message="Misconfiguration Problem"
+                beanaproblem(message)
+                sys.exit()
+            pricenow= float(liveprice['last'])
+        logging.info("Got Live Data From CoinGecko")
+        geckourlhistorical = "https://api.coingecko.com/api/v3/coins/"+whichcoin+"/market_chart/range?vs_currency="+fiat+"&from="+str(starttimeseconds)+"&to="+str(endtimeseconds)
+        logging.info(geckourlhistorical)
+        rawtimeseries = requests.get(geckourlhistorical).json()
+        logging.info("Got price for the last "+str(days_ago)+" days from CoinGecko")
+        timeseriesarray = rawtimeseries['prices']
+        timeseriesstack = []
+        length=len (timeseriesarray)
+        i=0
+        while i < length:
+            timeseriesstack.append(float (timeseriesarray[i][1]))
+            i+=1
 
-    if config['ticker']['exchange']=='default' or fiat!='usd':
-        geckourl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency="+fiat+"&ids="+whichcoin
-        logging.info(geckourl)
-        rawlivecoin = requests.get(geckourl).json()
-        logging.info(rawlivecoin[0])   
-        liveprice = rawlivecoin[0]
-        pricenow= float(liveprice['current_price'])
-    else:
-        geckourl= "https://api.coingecko.com/api/v3/exchanges/"+config['ticker']['exchange']+"/tickers?coin_ids="+whichcoin+"&include_exchange_logo=false"
-        logging.info(geckourl)
-        rawlivecoin = requests.get(geckourl).json()
-        liveprice= rawlivecoin['tickers'][0]
-        if  liveprice['target']!='USD':
-            logging.info("The exhange is not listing in USD, misconfigured - shutting down script")
-            message="Misconfiguration Problem"
-            beanaproblem(message)
-            sys.exit()
-        pricenow= float(liveprice['last'])
-    logging.info("Got Live Data From CoinGecko")
-    geckourlhistorical = "https://api.coingecko.com/api/v3/coins/"+whichcoin+"/market_chart/range?vs_currency="+fiat+"&from="+str(starttimeseconds)+"&to="+str(endtimeseconds)
-    logging.info(geckourlhistorical)
-    rawtimeseries = requests.get(geckourlhistorical).json()
-    logging.info("Got price for the last "+str(days_ago)+" days from CoinGecko")
-    timeseriesarray = rawtimeseries['prices']
-    timeseriesstack = []
-    length=len (timeseriesarray)
-    i=0
-    while i < length:
-        timeseriesstack.append(float (timeseriesarray[i][1]))
-        i+=1
-
-    timeseriesstack.append(pricenow)
-    return timeseriesstack
+        timeseriesstack.append(pricenow)
+        allprices={whichcoin: timeseriesstack}
+    return allprices
 
 def makeSpark(pricestack):
     # Draw and save the sparkline that represents historical data
@@ -271,6 +299,12 @@ def parse_args():
                    help='run the tests with the display rotated by the specified value')
     return p.parse_args()
 
+def currencystringtolist(currstring):
+    # Takes the string for currencies in the config.yaml file and turns it into a list
+    curr_list = currstring.split(",")
+    curr_list = [x.strip(' ') for x in curr_list]
+    return curr_list
+
 def main():
 
     def fullupdate():
@@ -280,16 +314,17 @@ def main():
         but the e-Paper is too slow to bother the coingecko API 
         """
         try:
-            pricestack=getData(config)
+            allprices=getData(config)
             # generate sparkline
-            makeSpark(pricestack)
+#           makeSpark(allprices)
             # update display
-            updateDisplay(config, pricestack)
+#           updateDisplay(config, allprices)
             lastgrab=time.time()
             time.sleep(.2)
         except Exception as e:
             message="Data pull/print problem"
-            beanaproblem(str(e))
+            pic = beanaproblem(str(e))
+            display_image_8bpp(display, pic)
             time.sleep(10)
             lastgrab=lastcoinfetch
         return lastgrab
