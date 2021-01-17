@@ -25,6 +25,13 @@ dirname = os.path.dirname(__file__)
 configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
 picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'images')
 
+def human_format(num):
+    num = float('{:.3g}'.format(num))
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000.0
+    return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
 
 def internet(host="8.8.8.8", port=53, timeout=3):
     """
@@ -88,7 +95,7 @@ def clear_display(display):
 def beanaproblem(image,message):
 #   A visual cue that the wheels have fallen off
     thebean = Image.open(os.path.join(picdir,'thebean.bmp'))
-    image.paste(thebean, (60,15))
+    image.paste(thebean, (60,85))
     writewrappedlines(image, message,fontsize=80, y_text=150,height=100,width=40 ,fontstring="Forum-Regular")
     return image 
 
@@ -116,6 +123,7 @@ def getData(config):
     starttimeseconds = starttime
     endtimeseconds = endtime
     allprices = {}
+    volumes = {}
     # Get the price 
     for whichcoin in crypto_list:
         print(whichcoin)
@@ -125,9 +133,10 @@ def getData(config):
         print(rawlivecoin[0])   
         liveprice = rawlivecoin[0]
         pricenow= float(liveprice['current_price'])
+        volumenow = float(liveprice['total_volume'])
         print("Got Live Data From CoinGecko")
         geckourlhistorical = "https://api.coingecko.com/api/v3/coins/"+whichcoin+"/market_chart/range?vs_currency="+fiat+"&from="+str(starttimeseconds)+"&to="+str(endtimeseconds)
-        logging.info(geckourlhistorical)
+        print(geckourlhistorical)
         rawtimeseries = requests.get(geckourlhistorical).json()
         print("Got price for the last "+str(days_ago)+" days from CoinGecko")
         timeseriesarray = rawtimeseries['prices']
@@ -139,7 +148,9 @@ def getData(config):
             i+=1
         timeseriesstack.append(pricenow)
         allprices[whichcoin] = timeseriesstack
-    return allprices
+        volstring=str(whichcoin+"volume")
+        volumes[volstring]=volumenow
+    return allprices, volumes
 
 def makeSpark(allprices):
     # Draw and save the sparkline that represents historical data
@@ -164,7 +175,7 @@ def makeSpark(allprices):
         plt.clf() # Close plot to prevent memory error
 
 
-def updateDisplay(image,config,allprices):
+def updateDisplay(image,config,allprices, volumes):
     """   
     Takes the price data, the desired coin/fiat combo along with the config info for formatting
     if config is re-written following adustment we could avoid passing the last two arguments as
@@ -213,16 +224,17 @@ def updateDisplay(image,config,allprices):
         draw = ImageDraw.Draw(image)   
  #       draw.text((110,90),str(days_ago)+"day : "+pricechange,font =font_date,fill = 0)
         # Print price to 5 significant figures
-        image.paste(sparkpng, (290,height+40))
+        image.paste(sparkpng, (250,height+40))
         image.paste(tokenimage, (120,height+30))
 
         text=symbolstring+pricenowstring
-        _place_text(image, text, x_offset=470, y_offset=height-400,fontsize=120,fontstring="JosefinSans-Light")
-        text=str(days_ago)+" day : "+pricechange
-        _place_text(image, text, x_offset=470, y_offset=height-320,fontsize=60,fontstring="JosefinSans-Light")
+        _place_text(image, text, x_offset=450, y_offset=height-400,fontsize=140,fontstring="JosefinSans-Light")
+        vol = human_format(volumes[key+"volume"])
+        text=pricechange + " vol:" + symbolstring + vol
+        _place_text(image, text, x_offset=450, y_offset=height-315,fontsize=50,fontstring="JosefinSans-Light")
         height += heightincrement
     text=str(time.strftime("%H:%M %a %d %b %Y"))
-    _place_text(image, text, x_offset=0, y_offset=-420,fontsize=50,fontstring="JosefinSans-Medium")
+    _place_text(image, text+", "+str(days_ago)+" day charts", x_offset=0, y_offset=-420,fontsize=50,fontstring="JosefinSans-Medium")
     return image
 
 
@@ -321,14 +333,13 @@ def main():
         """
         try:
             print("FULL UPDATE")
-            allprices=getData(config)
+            allprices, volumes=getData(config)
             # generate sparkline
             print("SPARKY")
             makeSpark(allprices)
             # update display
-            screenimage=updateDisplay(img,config, allprices)
+            screenimage=updateDisplay(img,config, allprices, volumes)
             display_image_8bpp(display, screenimage)
-            print(allprices)
             lastgrab=time.time()
             time.sleep(.2)
         except Exception as e:
@@ -367,6 +378,7 @@ def main():
     while True:
         if internet():
             if (time.time() - lastcoinfetch > float(config['ticker']['updatefrequency'])) or (datapulled==False):
+                img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
                 lastcoinfetch=fullupdate()
                 datapulled = True
             
