@@ -1,9 +1,12 @@
 
 from time import sleep
+from random import randrange
 import argparse
 from PIL import Image, ImageDraw, ImageFont
 from sys import path
 from IT8951 import constants
+import matplotlib 
+matplotlib.use('Agg')
 import os, random
 import textwrap
 import qrcode
@@ -58,35 +61,6 @@ def print_system_info(display):
     print('  LUT version: {}'.format(epd.lut_version))
     print()
 
-def _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-Regular"):
-    '''
-    Put some centered text at a location on the image.
-    '''
-
-    draw = ImageDraw.Draw(img)
-
-    try:
-        filename = os.path.join(dirname, './fonts/'+fontstring+'.ttf')
-        font = ImageFont.truetype(filename, fontsize)
-    except OSError:
-        font = ImageFont.truetype('/usr/share/fonts/TTF/DejaVuSans.ttf', fontsize)
-
-    img_width, img_height = img.size
-    text_width, _ = font.getsize(text)
-    text_height = fontsize
-
-    draw_x = (img_width - text_width)//2 + x_offset
-    draw_y = (img_height - text_height)//2 + y_offset
-
-    draw.text((draw_x, draw_y), text, font=font,fill=(0,0,0) )
-
-def writewrappedlines(img,text,fontsize,y_text=-300,height=110, width=27,fontstring="Forum-Regular"):
-    lines = textwrap.wrap(text, width)
-    for line in lines:
-        width= 0
-        _place_text(img, line,0, y_text, fontsize,fontstring)
-        y_text += height
-    return img
 
 def clear_display(display):
     print('Clearing display...')
@@ -189,7 +163,7 @@ def updateDisplay(image,config,allprices, volumes):
 
     if fiat=="jpy":
         symbolstring="¥"
-    height=160
+    height=190
 
     heightincrement=295
     for key in allprices.keys():  
@@ -224,17 +198,38 @@ def updateDisplay(image,config,allprices, volumes):
         draw = ImageDraw.Draw(image)   
  #       draw.text((110,90),str(days_ago)+"day : "+pricechange,font =font_date,fill = 0)
         # Print price to 5 significant figures
-        image.paste(sparkpng, (250,height+40))
-        image.paste(tokenimage, (120,height+30))
+        image.paste(sparkpng, (670,height+40))
+        image.paste(tokenimage, (70,height+30))
 
         text=symbolstring+pricenowstring
-        _place_text(image, text, x_offset=450, y_offset=height-400,fontsize=140,fontstring="JosefinSans-Light")
+        _place_text(image, text, x_offset=-220, y_offset=height-400,fontsize=130,fontstring="JosefinSans-Light")
         vol = human_format(volumes[key+"volume"])
         text=pricechange + " vol:" + symbolstring + vol
-        _place_text(image, text, x_offset=450, y_offset=height-315,fontsize=50,fontstring="JosefinSans-Light")
+        _place_text(image, text, x_offset=-220, y_offset=height-315,fontsize=50,fontstring="JosefinSans-Light")
         height += heightincrement
     text=str(time.strftime("%H:%M %a %d %b %Y"))
-    _place_text(image, text+", "+str(days_ago)+" day charts", x_offset=0, y_offset=-420,fontsize=50,fontstring="JosefinSans-Medium")
+    _place_text(image, "Updated: "+text+". "+str(days_ago)+" day data", x_offset=-25, y_offset=-390,fontsize=50,fontstring="JosefinSans-Medium")
+    if config['display']['maximalist']==True:
+        print("I AM MAXIMAL")
+        d = feedparser.parse(config['display']['feedurl'])
+        print("STORIES:"+str(len(d.entries)))
+        storynum=randrange(len(d.entries)-1)
+        text=d.entries[storynum].title
+        text=re.sub(r'&uArr; ', '', text)
+        fontstring="JosefinSans-Light"
+        y_text=125
+        height= 100
+        width= 37
+        fontsize=70
+        image=writewrappedlines(image,text,fontsize,y_text,height, width,fontstring)
+        urlstring=d.entries[storynum].link
+        qr = qrcode.QRCode(version=1,error_correction=qrcode.constants.ERROR_CORRECT_L,box_size=3,border=0,)
+        qr.add_data(urlstring)
+        qr.make(fit=True)
+        theqr = qr.make_image(fill_color="#FFFFFF", back_color="#000000")
+        MAX_SIZE=(150,150)
+        theqr.thumbnail(MAX_SIZE)
+        image.paste(theqr, (1200,930))
     return image
 
 
@@ -270,7 +265,7 @@ def writewrappedlines(img,text,fontsize,y_text=-300,height=110, width=27,fontstr
     lines = textwrap.wrap(text, width)
     for line in lines:
         width= 0
-        _place_text(img, line,0, y_text, fontsize,fontstring)
+        _place_text(img, line,-30, y_text, fontsize,fontstring)
         y_text += height
     return img
 
@@ -361,7 +356,7 @@ def main():
         # value means faster display refreshes. the documentation for the IT8951 device
         # says the max is 24 MHz (24000000), but my device seems to still work as high as
         # 80 MHz (80000000)
-        display = AutoEPDDisplay(vcom=-2.69, rotate=args.rotate, spi_hz=24000000)
+        display = AutoEPDDisplay(vcom=-2.61, rotate=args.rotate, spi_hz=24000000)
 
         print('VCOM set to', display.epd.get_vcom())
 
@@ -373,6 +368,11 @@ def main():
 #   Get the configuration from config.yaml
     with open(configfile) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
+    if config['display']['maximalist']==True:
+            curr_string = config['ticker']['currency']
+            curr_list = curr_string.split(",")
+            curr_list = [x.strip(' ') for x in curr_list]
+            config['ticker']['currency']=curr_list [0]
     datapulled=False
     lastcoinfetch = time.time()
     while True:
