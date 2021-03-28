@@ -1,9 +1,10 @@
 display:
   inverted: false
-  orientation: 90
+  maximalist: true
+  feedurl: https://news.hodlhodl.com/news.rss
 ticker:
-  currency: ethereum,litecoin,bitcoin-cash,stellar,monero,uniswap,bitcoin
+  currency: bitcoin,ethereum,monero
   exchange: default
-  fiatcurrency: eur,jpy,chf,gbp,usd
-  updatefrequency: 600
-  sparklinedays: 3 
+  fiatcurrency: usd,eur,gbp
+  updatefrequency: 300
+  sparklinedays: 28
