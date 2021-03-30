@@ -2,6 +2,7 @@
 from time import sleep
 from random import randrange
 import argparse
+import PIL
 from PIL import Image, ImageDraw, ImageFont
 from sys import path
 from IT8951 import constants
@@ -217,7 +218,6 @@ def guardianheadlines(img):
     imlogoaud = Image.open(filenameaudrey)
     resize = 300,300
     imlogoaud.thumbnail(resize)
-    imlogoaud=imlogoaud.transpose(PIL.Image.FLIP_LEFT_RIGHT)
 
     d = feedparser.parse('https://www.theguardian.com/uk/rss')
     filename = os.path.join(dirname, 'images/guardianlogo.jpg')
@@ -225,7 +225,7 @@ def guardianheadlines(img):
     resize = 800,150
     imlogo.thumbnail(resize)
     img.paste(imlogo,(100, 100))
-    img.paste(imlogoaud,(1050, 760))
+    img.paste(imlogoaud,(100, 760))
     text=d.entries[0].title
     fontstring="Merriweather-Light"
     y_text=-200
@@ -233,7 +233,14 @@ def guardianheadlines(img):
     width= 27
     fontsize=90
     img=writewrappedlines(img,text,fontsize,y_text,height, width,fontstring)
-
+    urlstring=d.entries[0].link
+    qr = qrcode.QRCode(version=1,error_correction=qrcode.constants.ERROR_CORRECT_L,box_size=3,border=0,)
+    qr.add_data(urlstring)
+    qr.make(fit=True)
+    theqr = qr.make_image(fill_color="#FFFFFF", back_color="#000000")
+    MAX_SIZE=(150,150)
+    theqr.thumbnail(MAX_SIZE)
+    img.paste(theqr, (1200,930))
     return img
 
 
