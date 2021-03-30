@@ -28,6 +28,117 @@ dirname = os.path.dirname(__file__)
 configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
 picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'images')
 
+def wordaday(img):
+    print("get word a day")
+    filename = os.path.join(dirname, 'images/rabbitsq.png')
+    imlogo = Image.open(filename)
+    resize = 300,300
+    imlogo.thumbnail(resize)
+    d = feedparser.parse('https://wordsmith.org/awad/rss1.xml')
+    wad = d.entries[0].title
+    fontstring="Forum-Regular"
+    y_text=-200
+    height= 110
+    width= 27
+    fontsize=180
+    img=writewrappedlines(img,wad,fontsize,y_text,height, width,fontstring)
+    img.paste(imlogo,(100, 760))
+    wadsummary= d.entries[0].summary
+    fontstring="GoudyBookletter1911-Regular"
+    y_text=0
+    height= 80
+    width= 40
+    fontsize=70
+    img=writewrappedlines(img,wadsummary,fontsize,y_text,height, width,fontstring)
+    return img
+
+def socialmetrics(img):
+    print("get social metrics")
+    return img
+
+def redditquotes(img):
+    print("get reddit quotes")
+    filename = os.path.join(dirname, 'images/rabbitsq.png')
+    imlogo = Image.open(filename)
+    resize = 300,300
+    imlogo.thumbnail(resize)
+    quoteurl = 'https://www.reddit.com/r/quotes/top/.json?t=week&limit=100'
+    rawquotes = requests.get(quoteurl,headers={'User-agent': 'Chrome'}).json()
+    quotestack = []
+    i=0
+    try:
+        length= len(rawquotes['data']['children'])
+        while i < length:
+            quotestack.append(str(rawquotes['data']['children'][i]['data']['title']))
+            i+=1
+        for key in rawquotes.keys():
+            print(key)
+    except:
+        print('Reddit Does Not Like You')
+
+#   Tidy quotes
+    i=0
+    while i<len(quotestack):
+        result = unicodedata.normalize('NFKD', quotestack[i]).encode('ascii', 'ignore')
+        quotestack[i]=result.decode()
+        i+=1
+    quotestack = by_size(quotestack, 170)
+    
+    while True:
+        quote=random.choice (quotestack)
+    #   Replace fancypants quotes with vanilla quotes
+        quote=re.sub("“", "\"", quote)
+        quote=re.sub("”", "\"", quote)
+        string = quote
+        count = quote.count("\"")
+        print("Count="+str(count))
+        if count >= 2:
+            print("2 or more quotes - split after last one")
+            sub = "\""
+            wanted = "\" ~"
+            n = count
+            quote=nth_repl(quote, sub, wanted, n)
+            print(quote)
+
+        else:
+            matchObj = re.search(r"(\.)\s(\w+)$",quote)
+            if matchObj:
+                quote= re.sub("\.\s*\w+$", " ~ "+matchObj.group(2), quote)
+            matchObj = re.search(r"\((\w+)\)$",quote)
+            if matchObj:
+                quote= re.sub("\(\w+\)$", matchObj.group(1), quote)
+            quote= re.sub("\s+\"\s+", "\"", quote)
+            quote= re.sub("\s+-|\s+—|\s+―", "--", quote)
+
+
+        quote= re.sub("~", "--", quote)
+        splitquote = quote.split("--")
+        quote = splitquote[0]
+
+        quote = quote.strip()
+        quote = quote.strip("\"")
+        quote = quote.strip()
+
+        if splitquote[-1]!=splitquote[0] and len(splitquote[-1])<=25:
+            img.paste(imlogo,(100, 760))
+            fontstring = "JosefinSans-Light"
+            y_text= -300
+            height= 110
+            width= 27
+            fontsize=100
+            img=writewrappedlines(img,quote,fontsize,y_text,height, width,fontstring)
+            source = splitquote[-1]
+            source = source.strip()
+            source = source.strip("-")
+            print(source)
+            draw = ImageDraw.Draw(img) 
+            draw.line((500,880, 948,880), fill=255, width=3)
+#           _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-Regular"):
+            _place_text(img,source,0,430,80,"JosefinSans-Light")
+            break
+
+    return img
+
 def human_format(num):
     num = float('{:.3g}'.format(num))
     magnitude = 0
