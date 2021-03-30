@@ -192,6 +192,50 @@ def display_image_8bpp(display, img):
     display.frame_buf.paste(img, paste_coords)
     display.draw_full(constants.DisplayModes.GC16)
 
+def newyorkercartoon(img):
+    print("Get a Cartoon")
+    d = feedparser.parse('https://www.newyorker.com/feed/cartoons/daily-cartoon')
+    caption=d.entries[0].summary
+    imagedeets = d.entries[0].media_thumbnail[0]
+    imframe = Image.open(requests.get(imagedeets['url'], stream=True).raw)
+    resize = 1200,800
+    imframe.thumbnail(resize, Image.ANTIALIAS)
+    imwidth, imheight = imframe.size
+    xvalue= int(1448/2-imwidth/2)
+    img.paste(imframe,(xvalue, 75))
+    fontstring="Forum-Regular"
+    y_text= 390
+    height= 50
+    width= 50
+    fontsize=60
+    img=writewrappedlines(img,caption,fontsize,y_text,height, width,fontstring)
+    return img
+
+def guardianheadlines(img):
+    print("Get the Headlines")
+    filenameaudrey = os.path.join(dirname, 'images/rabbitsq.png')
+    imlogoaud = Image.open(filenameaudrey)
+    resize = 300,300
+    imlogoaud.thumbnail(resize)
+    imlogoaud=imlogoaud.transpose(PIL.Image.FLIP_LEFT_RIGHT)
+
+    d = feedparser.parse('https://www.theguardian.com/uk/rss')
+    filename = os.path.join(dirname, 'images/guardianlogo.jpg')
+    imlogo = Image.open(filename)
+    resize = 800,150
+    imlogo.thumbnail(resize)
+    img.paste(imlogo,(100, 100))
+    img.paste(imlogoaud,(1050, 760))
+    text=d.entries[0].title
+    fontstring="Merriweather-Light"
+    y_text=-200
+    height= 140
+    width= 27
+    fontsize=90
+    img=writewrappedlines(img,text,fontsize,y_text,height, width,fontstring)
+
+    return img
+
 
 def getData(config):
     """
@@ -431,7 +475,7 @@ def currencystringtolist(currstring):
 
 def main():
 
-    def fullupdate():
+    def crypto(img):
         """  
         The steps required for a full update of the display
         Earlier versions of the code didn't grab new data for some operations
@@ -444,17 +488,13 @@ def main():
             print("SPARKY")
             makeSpark(allprices)
             # update display
-            screenimage=updateDisplay(img,config, allprices, volumes)
-            display_image_8bpp(display, screenimage)
-            lastgrab=time.time()
+            pic=updateDisplay(img,config, allprices, volumes)
             time.sleep(.2)
         except Exception as e:
             message="Data pull/print problem"
             pic = beanaproblem(img,str(e))
-            display_image_8bpp(display, pic)
             time.sleep(10)
-            lastgrab=lastcoinfetch
-        return lastgrab
+        return pic
 
     args = parse_args()
 
@@ -475,6 +515,7 @@ def main():
         from IT8951.display import VirtualEPDDisplay
         display = VirtualEPDDisplay(dims=(800, 600), rotate=args.rotate)
     
+    my_list = [crypto,redditquotes,wordaday, guardianheadlines]
     img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
 #   Get the configuration from config.yaml
     with open(configfile) as f:
@@ -485,13 +526,15 @@ def main():
             curr_list = [x.strip(' ') for x in curr_list]
             config['ticker']['currency']=curr_list [0]
     datapulled=False
-    lastcoinfetch = time.time()
+    lastrefresh = time.time()
     while True:
         if internet():
-            if (time.time() - lastcoinfetch > float(config['ticker']['updatefrequency'])) or (datapulled==False):
+            if (time.time() - lastrefresh > float(config['ticker']['updatefrequency'])) or (datapulled==False):
                 img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-                lastcoinfetch=fullupdate()
+                random.choice(my_list)(img)
+                display_image_8bpp(display,img)
                 datapulled = True
+                lastrefresh=time.time()
             
 
 if __name__ == '__main__':
