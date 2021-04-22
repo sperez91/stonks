@@ -344,7 +344,7 @@ def updateDisplay(image,config,allprices, volumes):
             rawimage = requests.get(tokenimageurl).json()
             tokenimage = Image.open(requests.get(rawimage['image']['large'], stream=True).raw)
             tokenimage = tokenimage.convert("RGBA")
-            new_image = Image.new("RGBA", (290,290), "WHITE") # Create a white rgba background with a 10 pizel border
+            new_image = Image.new("RGBA", (290,290), "WHITE") # Create a white rgba background with a 10 pixel border
             new_image.paste(tokenimage, (20, 20), tokenimage)   
             tokenimage=new_image
             tokenimage.save(tokenfilename)
@@ -364,10 +364,10 @@ def updateDisplay(image,config,allprices, volumes):
         image.paste(tokenimage, (70,height+30))
 
         text=symbolstring+pricenowstring
-        _place_text(image, text, x_offset=-220, y_offset=height-400,fontsize=130,fontstring="JosefinSans-Light")
+        _place_text(image, text, x_offset=-200, y_offset=height-400,fontsize=130,fontstring="JosefinSans-Light")
         vol = human_format(volumes[key+"volume"])
         text=pricechange + " vol:" + symbolstring + vol
-        _place_text(image, text, x_offset=-220, y_offset=height-315,fontsize=50,fontstring="JosefinSans-Light")
+        _place_text(image, text, x_offset=-200, y_offset=height-315,fontsize=50,fontstring="JosefinSans-Light")
         height += heightincrement
     text=str(time.strftime("%H:%M %a %d %b %Y"))
     _place_text(image, "Updated: "+text+". "+str(days_ago)+" day data", x_offset=-25, y_offset=-390,fontsize=50,fontstring="JosefinSans-Medium")
