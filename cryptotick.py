@@ -505,6 +505,9 @@ def main():
 
     args = parse_args()
 
+    with open(configfile) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+
     if not args.virtual:
         from IT8951.display import AutoEPDDisplay
 
@@ -514,7 +517,7 @@ def main():
         # value means faster display refreshes. the documentation for the IT8951 device
         # says the max is 24 MHz (24000000), but my device seems to still work as high as
         # 80 MHz (80000000)
-        display = AutoEPDDisplay(vcom=-2.61, rotate=args.rotate, spi_hz=24000000)
+        display = AutoEPDDisplay(vcom=config['display']['vcom'], rotate=args.rotate, spi_hz=24000000)
 
         print('VCOM set to', display.epd.get_vcom())
 
@@ -522,11 +525,9 @@ def main():
         from IT8951.display import VirtualEPDDisplay
         display = VirtualEPDDisplay(dims=(800, 600), rotate=args.rotate)
     
-    my_list = [crypto,redditquotes,wordaday, guardianheadlines]
+    my_list = [crypto, guardianheadlines]
     img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
 #   Get the configuration from config.yaml
-    with open(configfile) as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
     if config['display']['maximalist']==True:
             curr_string = config['ticker']['currency']
             curr_list = curr_string.split(",")
