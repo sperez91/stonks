@@ -2,6 +2,7 @@ display:
   inverted: false
   maximalist: true
   feedurl: https://news.hodlhodl.com/news.rss
+  vcom: -2.61
 ticker:
   currency: bitcoin,ethereum,monero
   exchange: default
