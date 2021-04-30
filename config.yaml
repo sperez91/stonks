@@ -4,7 +4,7 @@ display:
   feedurl: https://news.hodlhodl.com/news.rss
   vcom: -2.61
 ticker:
-  currency: bitcoin,ethereum,monero
+  currency: bitcoin,ethereum,pancake-bunny
   exchange: default
   fiatcurrency: usd,eur,gbp
   updatefrequency: 300
