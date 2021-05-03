@@ -1,4 +1,3 @@
-
 from time import sleep
 from random import randrange
 import argparse
@@ -29,7 +28,7 @@ dirname = os.path.dirname(__file__)
 configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
 picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'images')
 
-def wordaday(img):
+def wordaday(img, config):
     print("get word a day")
     filename = os.path.join(dirname, 'images/rabbitsq.png')
     imlogo = Image.open(filename)
@@ -53,11 +52,11 @@ def wordaday(img):
     img=writewrappedlines(img,wadsummary,fontsize,y_text,height, width,fontstring)
     return img
 
-def socialmetrics(img):
+def socialmetrics(img, config):
     print("get social metrics")
     return img
 
-def redditquotes(img):
+def redditquotes(img, config):
     print("get reddit quotes")
     filename = os.path.join(dirname, 'images/rabbitsq.png')
     imlogo = Image.open(filename)
@@ -140,60 +139,8 @@ def redditquotes(img):
 
     return img
 
-def human_format(num):
-    num = float('{:.3g}'.format(num))
-    magnitude = 0
-    while abs(num) >= 1000:
-        magnitude += 1
-        num /= 1000.0
-    return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
 
-def internet(host="8.8.8.8", port=53, timeout=3):
-    """
-    Host: 8.8.8.8 (google-public-dns-a.google.com)
-    OpenPort: 53/tcp
-    Service: domain (DNS/TCP)
-    """
-    try:
-        socket.setdefaulttimeout(timeout)
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
-        return True
-    except socket.error as ex:
-        logging.info("No internet")
-        return False
-
-
-def print_system_info(display):
-    epd = display.epd
-
-    print('System info:')
-    print('  display size: {}x{}'.format(epd.width, epd.height))
-    print('  img buffer address: {:X}'.format(epd.img_buf_address))
-    print('  firmware version: {}'.format(epd.firmware_version))
-    print('  LUT version: {}'.format(epd.lut_version))
-    print()
-
-
-def clear_display(display):
-    print('Clearing display...')
-    display.clear()
-
-def beanaproblem(image,message):
-#   A visual cue that the wheels have fallen off
-    thebean = Image.open(os.path.join(picdir,'thebean.bmp'))
-    image.paste(thebean, (60,85))
-    writewrappedlines(image, message,fontsize=80, y_text=150,height=100,width=40 ,fontstring="Forum-Regular")
-    return image 
-
-def display_image_8bpp(display, img):
-    dims = (display.width, display.height)
-    img.thumbnail(dims)
-    paste_coords = [dims[i] - img.size[i] for i in (0,1)]  # align image with bottom of display
-    img=img.rotate(180, expand=True)
-    display.frame_buf.paste(img, paste_coords)
-    display.draw_full(constants.DisplayModes.GC16)
-
-def newyorkercartoon(img):
+def newyorkercartoon(img, config):
     print("Get a Cartoon")
     d = feedparser.parse('https://www.newyorker.com/feed/cartoons/daily-cartoon')
     caption=d.entries[0].summary
@@ -212,7 +159,7 @@ def newyorkercartoon(img):
     img=writewrappedlines(img,caption,fontsize,y_text,height, width,fontstring)
     return img
 
-def guardianheadlines(img):
+def guardianheadlines(img, config):
     print("Get the Headlines")
     filenameaudrey = os.path.join(dirname, 'images/rabbitsq.png')
     imlogoaud = Image.open(filenameaudrey)
@@ -242,6 +189,96 @@ def guardianheadlines(img):
     theqr.thumbnail(MAX_SIZE)
     img.paste(theqr, (1200,930))
     return img
+
+def crypto(img, config):
+    """  
+    The steps required for a full update of the display
+    Earlier versions of the code didn't grab new data for some operations
+    but the e-Paper is too slow to bother the coingecko API 
+    """
+    try:
+        print("FULL UPDATE")
+        allprices, volumes=getData(config)
+        # generate sparkline
+        print("SPARKY")
+        makeSpark(allprices)
+        # update display
+        pic=updateDisplay(img,config, allprices, volumes)
+        time.sleep(.2)
+        success=True
+    except Exception as e:
+        message="Data pull/print problem"
+        pic = beanaproblem(img,str(e))
+        success= False
+        time.sleep(10)
+    return pic, success
+
+#   The funtions below are all helper stuff for the display functions above
+#
+#
+#
+
+def human_format(num):
+    num = float('{:.3g}'.format(num))
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000.0
+    return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
+
+def internet(hostname="google.com"):
+    try:
+        # see if we can resolve the host name -- tells us if there is
+        # a DNS listening
+        host = socket.gethostbyname(hostname)
+        # connect to the host -- tells us if the host is actually
+        # reachable
+        s = socket.create_connection((host, 80), 2)
+        s.close()
+        return True
+    except:
+        logging.info("Google says No")
+        pass
+    return False
+
+
+def print_system_info(display):
+    epd = display.epd
+
+    print('System info:')
+    print('  display size: {}x{}'.format(epd.width, epd.height))
+    print('  img buffer address: {:X}'.format(epd.img_buf_address))
+    print('  firmware version: {}'.format(epd.firmware_version))
+    print('  LUT version: {}'.format(epd.lut_version))
+    print()
+
+
+def clear_display(display):
+    print('Clearing display...')
+    display.clear()
+
+def beanaproblem(image,message):
+#   A visual cue that the wheels have fallen off
+    thebean = Image.open(os.path.join(picdir,'thebean.png'))
+    image = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+    draw = ImageDraw.Draw(image)
+    image.paste(thebean, (160,345))
+    text=str(time.strftime("%H:%M %a %d %b %Y"))
+    _place_text(image, "Updated: "+text, x_offset=-25, y_offset=-390,fontsize=50,fontstring="JosefinSans-Medium")
+    writewrappedlines(image, "Message: "+message,70)
+    thebean.close()
+#   Reload last good config.yaml
+    with open(configfile) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    return image
+
+def display_image_8bpp(display, img):
+    dims = (display.width, display.height)
+    img.thumbnail(dims)
+    paste_coords = [dims[i] - img.size[i] for i in (0,1)]  # align image with bottom of display
+    img=img.rotate(180, expand=True)
+    display.frame_buf.paste(img, paste_coords)
+    display.draw_full(constants.DisplayModes.GC16)
 
 
 def getData(config):
@@ -480,28 +517,9 @@ def currencystringtolist(currstring):
     curr_list = [x.strip(' ') for x in curr_list]
     return curr_list
 
-def main():
 
-    def crypto(img):
-        """  
-        The steps required for a full update of the display
-        Earlier versions of the code didn't grab new data for some operations
-        but the e-Paper is too slow to bother the coingecko API 
-        """
-        try:
-            print("FULL UPDATE")
-            allprices, volumes=getData(config)
-            # generate sparkline
-            print("SPARKY")
-            makeSpark(allprices)
-            # update display
-            pic=updateDisplay(img,config, allprices, volumes)
-            time.sleep(.2)
-        except Exception as e:
-            message="Data pull/print problem"
-            pic = beanaproblem(img,str(e))
-            time.sleep(10)
-        return pic
+
+def main():
 
     args = parse_args()
 
@@ -525,24 +543,36 @@ def main():
         from IT8951.display import VirtualEPDDisplay
         display = VirtualEPDDisplay(dims=(800, 600), rotate=args.rotate)
     
-    my_list = [crypto, guardianheadlines]
-    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-#   Get the configuration from config.yaml
-    if config['display']['maximalist']==True:
-            curr_string = config['ticker']['currency']
-            curr_list = curr_string.split(",")
-            curr_list = [x.strip(' ') for x in curr_list]
-            config['ticker']['currency']=curr_list [0]
-    datapulled=False
-    lastrefresh = time.time()
-    while True:
-        if internet():
-            if (time.time() - lastrefresh > float(config['ticker']['updatefrequency'])) or (datapulled==False):
-                img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-                random.choice(my_list)(img)
-                display_image_8bpp(display,img)
-                datapulled = True
-                lastrefresh=time.time()
+    try:
+        my_list = [crypto]
+        img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+    #   Get the configuration from config.yaml
+        if config['display']['maximalist']==True:
+                curr_string = config['ticker']['currency']
+                curr_list = curr_string.split(",")
+                curr_list = [x.strip(' ') for x in curr_list]
+                config['ticker']['currency']=curr_list [0]
+        datapulled=False
+        lastrefresh = time.time()
+        while True:
+            if internet():
+                if (time.time() - lastrefresh > float(config['ticker']['updatefrequency'])) or (datapulled==False):
+                    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+                    img, success = random.choice(my_list)(img,config)
+                    display_image_8bpp(display,img)
+                    datapulled = success
+                    lastrefresh=time.time()
+                    time.sleep(5)
+    except IOError as e:
+        logging.info(e)
+        image=beanaproblem(display,str(e))
+        display_image(display,image)  
+    except KeyboardInterrupt:    
+        logging.info("ctrl + c:")
+        image=beanaproblem(display,"Keyboard Interrupt")
+        display_image_8bpp(display,image)
+        exit()
+
             
 
 if __name__ == '__main__':
