@@ -1,3 +1,3 @@
-# Stonks
+# TickerXL
 
-aka btcticker 2.0
+This is the code for Audrey. 
