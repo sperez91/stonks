@@ -29,166 +29,193 @@ configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.ya
 picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'images')
 
 def wordaday(img, config):
-    print("get word a day")
-    filename = os.path.join(dirname, 'images/rabbitsq.png')
-    imlogo = Image.open(filename)
-    resize = 300,300
-    imlogo.thumbnail(resize)
-    d = feedparser.parse('https://wordsmith.org/awad/rss1.xml')
-    wad = d.entries[0].title
-    fontstring="Forum-Regular"
-    y_text=-200
-    height= 110
-    width= 27
-    fontsize=180
-    img=writewrappedlines(img,wad,fontsize,y_text,height, width,fontstring)
-    img.paste(imlogo,(100, 760))
-    wadsummary= d.entries[0].summary
-    fontstring="GoudyBookletter1911-Regular"
-    y_text=0
-    height= 80
-    width= 40
-    fontsize=70
-    img=writewrappedlines(img,wadsummary,fontsize,y_text,height, width,fontstring)
-    return img
+    try:
+        print("get word a day")
+        filename = os.path.join(dirname, 'images/rabbitsq.png')
+        imlogo = Image.open(filename)
+        resize = 300,300
+        imlogo.thumbnail(resize)
+        d = feedparser.parse('https://wordsmith.org/awad/rss1.xml')
+        wad = d.entries[0].title
+        fontstring="Forum-Regular"
+        y_text=-200
+        height= 110
+        width= 27
+        fontsize=180
+        img=writewrappedlines(img,wad,fontsize,y_text,height, width,fontstring)
+        img.paste(imlogo,(100, 760))
+        wadsummary= d.entries[0].summary
+        fontstring="GoudyBookletter1911-Regular"
+        y_text=0
+        height= 80
+        width= 40
+        fontsize=70
+        img=writewrappedlines(img,wadsummary,fontsize,y_text,height, width,fontstring)
+        success=True
+    except Exception as e:
+        message="Data pull/print problem"
+        pic = beanaproblem(img,str(e))
+        success= False
+        time.sleep(10)
+    return img, success
 
 def socialmetrics(img, config):
     print("get social metrics")
     return img
 
 def redditquotes(img, config):
-    print("get reddit quotes")
-    filename = os.path.join(dirname, 'images/rabbitsq.png')
-    imlogo = Image.open(filename)
-    resize = 300,300
-    imlogo.thumbnail(resize)
-    quoteurl = 'https://www.reddit.com/r/quotes/top/.json?t=week&limit=100'
-    rawquotes = requests.get(quoteurl,headers={'User-agent': 'Chrome'}).json()
-    quotestack = []
-    i=0
     try:
-        length= len(rawquotes['data']['children'])
-        while i < length:
-            quotestack.append(str(rawquotes['data']['children'][i]['data']['title']))
+        print("get reddit quotes")
+        filename = os.path.join(dirname, 'images/rabbitsq.png')
+        imlogo = Image.open(filename)
+        resize = 300,300
+        imlogo.thumbnail(resize)
+        quoteurl = 'https://www.reddit.com/r/quotes/top/.json?t=week&limit=100'
+        rawquotes = requests.get(quoteurl,headers={'User-agent': 'Chrome'}).json()
+        quotestack = []
+        i=0
+        try:
+            length= len(rawquotes['data']['children'])
+            while i < length:
+                quotestack.append(str(rawquotes['data']['children'][i]['data']['title']))
+                i+=1
+            for key in rawquotes.keys():
+                print(key)
+        except:
+            print('Reddit Does Not Like You')
+
+    #   Tidy quotes
+        i=0
+        while i<len(quotestack):
+            result = unicodedata.normalize('NFKD', quotestack[i]).encode('ascii', 'ignore')
+            quotestack[i]=result.decode()
             i+=1
-        for key in rawquotes.keys():
-            print(key)
-    except:
-        print('Reddit Does Not Like You')
+        quotestack = by_size(quotestack, 170)
+        
+        while True:
+            quote=random.choice (quotestack)
+        #   Replace fancypants quotes with vanilla quotes
+            quote=re.sub("“", "\"", quote)
+            quote=re.sub("”", "\"", quote)
+            string = quote
+            count = quote.count("\"")
+            print("Count="+str(count))
+            if count >= 2:
+                print("2 or more quotes - split after last one")
+                sub = "\""
+                wanted = "\" ~"
+                n = count
+                quote=nth_repl(quote, sub, wanted, n)
+                print(quote)
 
-#   Tidy quotes
-    i=0
-    while i<len(quotestack):
-        result = unicodedata.normalize('NFKD', quotestack[i]).encode('ascii', 'ignore')
-        quotestack[i]=result.decode()
-        i+=1
-    quotestack = by_size(quotestack, 170)
-    
-    while True:
-        quote=random.choice (quotestack)
-    #   Replace fancypants quotes with vanilla quotes
-        quote=re.sub("“", "\"", quote)
-        quote=re.sub("”", "\"", quote)
-        string = quote
-        count = quote.count("\"")
-        print("Count="+str(count))
-        if count >= 2:
-            print("2 or more quotes - split after last one")
-            sub = "\""
-            wanted = "\" ~"
-            n = count
-            quote=nth_repl(quote, sub, wanted, n)
-            print(quote)
-
-        else:
-            matchObj = re.search(r"(\.)\s(\w+)$",quote)
-            if matchObj:
-                quote= re.sub("\.\s*\w+$", " ~ "+matchObj.group(2), quote)
-            matchObj = re.search(r"\((\w+)\)$",quote)
-            if matchObj:
-                quote= re.sub("\(\w+\)$", matchObj.group(1), quote)
-            quote= re.sub("\s+\"\s+", "\"", quote)
-            quote= re.sub("\s+-|\s+—|\s+―", "--", quote)
+            else:
+                matchObj = re.search(r"(\.)\s(\w+)$",quote)
+                if matchObj:
+                    quote= re.sub("\.\s*\w+$", " ~ "+matchObj.group(2), quote)
+                matchObj = re.search(r"\((\w+)\)$",quote)
+                if matchObj:
+                    quote= re.sub("\(\w+\)$", matchObj.group(1), quote)
+                quote= re.sub("\s+\"\s+", "\"", quote)
+                quote= re.sub("\s+-|\s+—|\s+―", "--", quote)
 
 
-        quote= re.sub("~", "--", quote)
-        splitquote = quote.split("--")
-        quote = splitquote[0]
+            quote= re.sub("~", "--", quote)
+            splitquote = quote.split("--")
+            quote = splitquote[0]
 
-        quote = quote.strip()
-        quote = quote.strip("\"")
-        quote = quote.strip()
+            quote = quote.strip()
+            quote = quote.strip("\"")
+            quote = quote.strip()
 
-        if splitquote[-1]!=splitquote[0] and len(splitquote[-1])<=25:
-            img.paste(imlogo,(100, 760))
-            fontstring = "JosefinSans-Light"
-            y_text= -300
-            height= 110
-            width= 27
-            fontsize=100
-            img=writewrappedlines(img,quote,fontsize,y_text,height, width,fontstring)
-            source = splitquote[-1]
-            source = source.strip()
-            source = source.strip("-")
-            print(source)
-            draw = ImageDraw.Draw(img) 
-            draw.line((500,880, 948,880), fill=255, width=3)
-#           _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-Regular"):
-            _place_text(img,source,0,430,80,"JosefinSans-Light")
-            break
-
-    return img
+            if splitquote[-1]!=splitquote[0] and len(splitquote[-1])<=25:
+                img.paste(imlogo,(100, 760))
+                fontstring = "JosefinSans-Light"
+                y_text= -300
+                height= 110
+                width= 27
+                fontsize=100
+                img=writewrappedlines(img,quote,fontsize,y_text,height, width,fontstring)
+                source = splitquote[-1]
+                source = source.strip()
+                source = source.strip("-")
+                print(source)
+                draw = ImageDraw.Draw(img) 
+                draw.line((500,880, 948,880), fill=255, width=3)
+    #           _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-Regular"):
+                _place_text(img,source,0,430,80,"JosefinSans-Light")
+                success=True
+                break
+    except Exception as e:
+        message="Data pull/print problem"
+        pic = beanaproblem(img,str(e))
+        success= False
+        time.sleep(10)
+    return img, success
 
 
 def newyorkercartoon(img, config):
-    print("Get a Cartoon")
-    d = feedparser.parse('https://www.newyorker.com/feed/cartoons/daily-cartoon')
-    caption=d.entries[0].summary
-    imagedeets = d.entries[0].media_thumbnail[0]
-    imframe = Image.open(requests.get(imagedeets['url'], stream=True).raw)
-    resize = 1200,800
-    imframe.thumbnail(resize, Image.ANTIALIAS)
-    imwidth, imheight = imframe.size
-    xvalue= int(1448/2-imwidth/2)
-    img.paste(imframe,(xvalue, 75))
-    fontstring="Forum-Regular"
-    y_text= 390
-    height= 50
-    width= 50
-    fontsize=60
-    img=writewrappedlines(img,caption,fontsize,y_text,height, width,fontstring)
-    return img
+    try:
+        print("Get a Cartoon")
+        d = feedparser.parse('https://www.newyorker.com/feed/cartoons/daily-cartoon')
+        caption=d.entries[0].summary
+        imagedeets = d.entries[0].media_thumbnail[0]
+        imframe = Image.open(requests.get(imagedeets['url'], stream=True).raw)
+        resize = 1200,800
+        imframe.thumbnail(resize, Image.ANTIALIAS)
+        imwidth, imheight = imframe.size
+        xvalue= int(1448/2-imwidth/2)
+        img.paste(imframe,(xvalue, 75))
+        fontstring="Forum-Regular"
+        y_text= 390
+        height= 50
+        width= 50
+        fontsize=60
+        img=writewrappedlines(img,caption,fontsize,y_text,height, width,fontstring)
+        success=True
+    except Exception as e:
+        message="Data pull/print problem"
+        pic = beanaproblem(img,str(e))
+        success= False
+        time.sleep(10)
+    return img, success
 
 def guardianheadlines(img, config):
-    print("Get the Headlines")
-    filenameaudrey = os.path.join(dirname, 'images/rabbitsq.png')
-    imlogoaud = Image.open(filenameaudrey)
-    resize = 300,300
-    imlogoaud.thumbnail(resize)
+    try:
+        print("Get the Headlines")
+        filenameaudrey = os.path.join(dirname, 'images/rabbitsq.png')
+        imlogoaud = Image.open(filenameaudrey)
+        resize = 300,300
+        imlogoaud.thumbnail(resize)
 
-    d = feedparser.parse('https://www.theguardian.com/uk/rss')
-    filename = os.path.join(dirname, 'images/guardianlogo.jpg')
-    imlogo = Image.open(filename)
-    resize = 800,150
-    imlogo.thumbnail(resize)
-    img.paste(imlogo,(100, 100))
-    img.paste(imlogoaud,(100, 760))
-    text=d.entries[0].title
-    fontstring="Merriweather-Light"
-    y_text=-200
-    height= 140
-    width= 27
-    fontsize=90
-    img=writewrappedlines(img,text,fontsize,y_text,height, width,fontstring)
-    urlstring=d.entries[0].link
-    qr = qrcode.QRCode(version=1,error_correction=qrcode.constants.ERROR_CORRECT_L,box_size=3,border=0,)
-    qr.add_data(urlstring)
-    qr.make(fit=True)
-    theqr = qr.make_image(fill_color="#FFFFFF", back_color="#000000")
-    MAX_SIZE=(150,150)
-    theqr.thumbnail(MAX_SIZE)
-    img.paste(theqr, (1200,930))
-    return img
+        d = feedparser.parse('https://www.theguardian.com/uk/rss')
+        filename = os.path.join(dirname, 'images/guardianlogo.jpg')
+        imlogo = Image.open(filename)
+        resize = 800,150
+        imlogo.thumbnail(resize)
+        img.paste(imlogo,(100, 100))
+        img.paste(imlogoaud,(100, 760))
+        text=d.entries[0].title
+        fontstring="Merriweather-Light"
+        y_text=-200
+        height= 140
+        width= 27
+        fontsize=90
+        img=writewrappedlines(img,text,fontsize,y_text,height, width,fontstring)
+        urlstring=d.entries[0].link
+        qr = qrcode.QRCode(version=1,error_correction=qrcode.constants.ERROR_CORRECT_L,box_size=3,border=0,)
+        qr.add_data(urlstring)
+        qr.make(fit=True)
+        theqr = qr.make_image(fill_color="#FFFFFF", back_color="#000000")
+        MAX_SIZE=(150,150)
+        theqr.thumbnail(MAX_SIZE)
+        img.paste(theqr, (1200,930))
+        success=True
+    except Exception as e:
+        message="Data pull/print problem"
+        pic = beanaproblem(img,str(e))
+        success= False
+        time.sleep(10)
+    return img, success
 
 def crypto(img, config):
     """  
@@ -323,6 +350,7 @@ def getData(config):
         allprices[whichcoin] = timeseriesstack
         volstring=str(whichcoin+"volume")
         volumes[volstring]=volumenow
+        time.sleep(3)
     return allprices, volumes
 
 def makeSpark(allprices):
@@ -543,35 +571,27 @@ def main():
         from IT8951.display import VirtualEPDDisplay
         display = VirtualEPDDisplay(dims=(800, 600), rotate=args.rotate)
     
-    try:
-        my_list = [crypto]
-        img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-    #   Get the configuration from config.yaml
-        if config['display']['maximalist']==True:
-                curr_string = config['ticker']['currency']
-                curr_list = curr_string.split(",")
-                curr_list = [x.strip(' ') for x in curr_list]
-                config['ticker']['currency']=curr_list [0]
-        datapulled=False
-        lastrefresh = time.time()
-        while True:
-            if internet():
-                if (time.time() - lastrefresh > float(config['ticker']['updatefrequency'])) or (datapulled==False):
-                    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-                    img, success = random.choice(my_list)(img,config)
-                    display_image_8bpp(display,img)
-                    datapulled = success
-                    lastrefresh=time.time()
-                    time.sleep(5)
-    except IOError as e:
-        logging.info(e)
-        image=beanaproblem(display,str(e))
-        display_image(display,image)  
-    except KeyboardInterrupt:    
-        logging.info("ctrl + c:")
-        image=beanaproblem(display,"Keyboard Interrupt")
-        display_image_8bpp(display,image)
-        exit()
+
+    my_list = currencystringtolist(config['function']['mode'])
+    print(my_list)
+    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+#   Get the configuration from config.yaml
+    if config['display']['maximalist']==True:
+            curr_string = config['ticker']['currency']
+            curr_list = curr_string.split(",")
+            curr_list = [x.strip(' ') for x in curr_list]
+            config['ticker']['currency']=curr_list [0]
+    datapulled=False
+    lastrefresh = time.time()
+    while True:
+        if internet():
+            if (time.time() - lastrefresh > float(config['ticker']['updatefrequency'])) or (datapulled==False):
+                img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+                img, success = eval(random.choice(my_list)+"(img,config)")
+                display_image_8bpp(display,img)
+                datapulled = success
+                lastrefresh=time.time()
+
 
             
 
