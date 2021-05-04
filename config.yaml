@@ -1,11 +1,13 @@
 display:
   inverted: false
-  maximalist: true
+  maximalist: false
   feedurl: https://news.hodlhodl.com/news.rss
   vcom: -2.61
 ticker:
-  currency: bitcoin,ethereum,pancake-bunny
+  currency: bitcoin,ethereum,dash
   exchange: default
   fiatcurrency: usd,eur,gbp
-  updatefrequency: 300
+  updatefrequency: 180
   sparklinedays: 28
+function: 
+  mode: crypto
