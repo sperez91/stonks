@@ -545,8 +545,24 @@ def currencystringtolist(currstring):
     curr_list = [x.strip(' ') for x in curr_list]
     return curr_list
 
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
 
-
+def listToString(s): 
+    
+    # initialize an empty string
+    str1 = s[0]
+    
+    # traverse in the string  
+    for i in  range(len(s)): 
+        str1 += ", "+s[i]  
+    
+    # return string  
+    return str1 
+        
+        
 def main():
 
     args = parse_args()
@@ -573,13 +589,15 @@ def main():
     
 
     my_list = currencystringtolist(config['function']['mode'])
+    weightstring = currencystringtolist(config['function']['weight'])
+    weights = [int(i) for i in weightstring]
     print(my_list)
     img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
 #   Get the configuration from config.yaml
+    curr_string = config['ticker']['currency']
+    curr_list = curr_string.split(",")
+    curr_list = [x.strip(' ') for x in curr_list]
     if config['display']['maximalist']==True:
-            curr_string = config['ticker']['currency']
-            curr_list = curr_string.split(",")
-            curr_list = [x.strip(' ') for x in curr_list]
             config['ticker']['currency']=curr_list [0]
     datapulled=False
     lastrefresh = time.time()
@@ -587,10 +605,25 @@ def main():
         if internet():
             if (time.time() - lastrefresh > float(config['ticker']['updatefrequency'])) or (datapulled==False):
                 img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-                img, success = eval(random.choice(my_list)+"(img,config)")
-                display_image_8bpp(display,img)
-                datapulled = success
-                lastrefresh=time.time()
+                thefunction=random.choices(my_list, weights=weights, k=1)[0]
+                if thefunction=="crypto" and len(curr_list)>=4 and config['display']['maximalist']!=True:
+                    n=3
+                    chunkslist=list(chunks(curr_list,n))
+                    for i in chunkslist:
+                        configsubset = config
+                        configsubset['ticker']['currency']=listToString(i)
+                        img, success = eval(thefunction+"(img,configsubset)")
+                        display_image_8bpp(display,img)
+                        img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+                        if success==True:
+                            time.sleep(int(config['ticker']['updatefrequency']))
+                    datapulled = success
+                    lastrefresh=time.time()
+                else:
+                    img, success = eval(thefunction+"(img,config)")
+                    display_image_8bpp(display,img)
+                    datapulled = success
+                    lastrefresh=time.time()
 
 
             
