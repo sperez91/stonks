@@ -615,10 +615,11 @@ def main():
                         img, success = eval(thefunction+"(img,configsubset)")
                         display_image_8bpp(display,img)
                         img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+                        lastrefresh=time.time()
                         if success==True:
                             time.sleep(int(config['ticker']['updatefrequency']))
                     datapulled = success
-                    lastrefresh=time.time()
+                    
                 else:
                     img, success = eval(thefunction+"(img,config)")
                     display_image_8bpp(display,img)
