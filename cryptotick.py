@@ -390,7 +390,7 @@ def updateDisplay(image,config,allprices, volumes):
 
     if fiat=="jpy":
         symbolstring="¥"
-    height=190
+    height=150
 
     heightincrement=295
     for key in allprices.keys():  
@@ -435,7 +435,7 @@ def updateDisplay(image,config,allprices, volumes):
         _place_text(image, text, x_offset=-200, y_offset=height-315,fontsize=50,fontstring="JosefinSans-Light")
         height += heightincrement
     text=str(time.strftime("%H:%M %a %d %b %Y"))
-    _place_text(image, "Updated: "+text+". "+str(days_ago)+" day data", x_offset=-25, y_offset=-390,fontsize=50,fontstring="JosefinSans-Medium")
+    _place_text(image, "Updated: "+text+". "+str(days_ago)+" day data", x_offset=-25, y_offset=-440,fontsize=50,fontstring="JosefinSans-Medium")
     if config['display']['maximalist']==True:
         print("I AM MAXIMAL")
         d = feedparser.parse(config['display']['feedurl'])
