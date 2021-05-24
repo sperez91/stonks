@@ -390,7 +390,7 @@ def updateDisplay(image,config,allprices, volumes):
 
     if fiat=="jpy":
         symbolstring="¥"
-    height=150
+    height=180
 
     heightincrement=295
     for key in allprices.keys():  
@@ -425,7 +425,7 @@ def updateDisplay(image,config,allprices, volumes):
         draw = ImageDraw.Draw(image)   
  #       draw.text((110,90),str(days_ago)+"day : "+pricechange,font =font_date,fill = 0)
         # Print price to 5 significant figures
-        image.paste(sparkpng, (670,height+40))
+        image.paste(sparkpng, (680,height+40))
         image.paste(tokenimage, (70,height+30))
 
         text=symbolstring+pricenowstring
@@ -435,7 +435,7 @@ def updateDisplay(image,config,allprices, volumes):
         _place_text(image, text, x_offset=-200, y_offset=height-315,fontsize=50,fontstring="JosefinSans-Light")
         height += heightincrement
     text=str(time.strftime("%H:%M %a %d %b %Y"))
-    _place_text(image, "Updated: "+text+". "+str(days_ago)+" day data", x_offset=-25, y_offset=-420,fontsize=50,fontstring="JosefinSans-Medium")
+    _place_text(image, "Updated: "+text+". "+str(days_ago)+" day data", x_offset=-25, y_offset=-400,fontsize=50,fontstring="JosefinSans-Medium")
     if config['display']['maximalist']==True:
         print("I AM MAXIMAL")
         d = feedparser.parse(config['display']['feedurl'])
