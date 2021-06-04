@@ -429,7 +429,11 @@ def updateDisplay(image,config,allprices, volumes):
         image.paste(tokenimage, (85,height+30))
 
         text=symbolstring+pricenowstring
-        _place_text(image, text, x_offset=-175, y_offset=height-400,fontsize=130,fontstring="JosefinSans-Light")
+        if len(text)>6:
+            pricefontsize=120
+        else:
+            pricefontsize=130
+        _place_text(image, text, x_offset=-175, y_offset=height-400,fontsize=pricefontsize,fontstring="JosefinSans-Light")
         vol = human_format(volumes[key+"volume"])
         text=pricechange + " vol:" + symbolstring + vol
         _place_text(image, text, x_offset=-175, y_offset=height-315,fontsize=50,fontstring="JosefinSans-Light")
