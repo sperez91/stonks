@@ -429,7 +429,7 @@ def updateDisplay(image,config,allprices, volumes):
         image.paste(tokenimage, (85,height+30))
 
         text=symbolstring+pricenowstring
-        if len(text)>6:
+        if len(text)>7:
             pricefontsize=120
         else:
             pricefontsize=130
