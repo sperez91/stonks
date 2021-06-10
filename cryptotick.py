@@ -23,6 +23,8 @@ import socket
 import numpy as np
 import matplotlib.pyplot as plt
 import currency
+import logging
+from fake_useragent import UserAgent
 
 dirname = os.path.dirname(__file__)
 configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
@@ -224,7 +226,7 @@ def crypto(img, config):
     but the e-Paper is too slow to bother the coingecko API 
     """
     try:
-        print("FULL UPDATE")
+        logging.info("FULL UPDATE")
         allprices, volumes=getData(config)
         # generate sparkline
         print("SPARKY")
@@ -234,7 +236,7 @@ def crypto(img, config):
         time.sleep(.2)
         success=True
     except Exception as e:
-        message="Data pull/print problem"
+        logging.info("Data pull/print problem")
         pic = beanaproblem(img,str(e))
         success= False
         time.sleep(10)
@@ -310,12 +312,17 @@ def display_image_8bpp(display, img):
 
 def getData(config):
     """
-    The function to update the ePaper display. There are two versions of the layout. One for portrait aspect ratio, one for landscape.
-    """
+    The function to grab the data
+    """ 
+    sleep_time = 10
+    num_retries = 5
+
     crypto_list = currencystringtolist(config['ticker']['currency'])
     fiat_list=currencystringtolist(config['ticker']['fiatcurrency'])
+    ua = UserAgent()
+    header = {'User-Agent':str(ua.chrome)}
     fiat=fiat_list[0]
-    print(fiat)
+    logging.info(crypto_list)
     logging.info("Getting Data")
     days_ago=int(config['ticker']['sparklinedays'])   
     endtime = int(time.time())
@@ -324,33 +331,53 @@ def getData(config):
     endtimeseconds = endtime
     allprices = {}
     volumes = {}
-    # Get the price 
-    for whichcoin in crypto_list:
-        print(whichcoin)
-        geckourl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency="+fiat+"&ids="+whichcoin
-        print(geckourl)
-        rawlivecoin = requests.get(geckourl).json()
-        print(rawlivecoin[0])   
-        liveprice = rawlivecoin[0]
-        pricenow= float(liveprice['current_price'])
-        volumenow = float(liveprice['total_volume'])
-        print("Got Live Data From CoinGecko")
-        geckourlhistorical = "https://api.coingecko.com/api/v3/coins/"+whichcoin+"/market_chart/range?vs_currency="+fiat+"&from="+str(starttimeseconds)+"&to="+str(endtimeseconds)
-        print(geckourlhistorical)
-        rawtimeseries = requests.get(geckourlhistorical).json()
-        print("Got price for the last "+str(days_ago)+" days from CoinGecko")
-        timeseriesarray = rawtimeseries['prices']
-        timeseriesstack = []
-        length=len (timeseriesarray)
-        i=0
-        while i < length:
-            timeseriesstack.append(float (timeseriesarray[i][1]))
-            i+=1
-        timeseriesstack.append(pricenow)
-        allprices[whichcoin] = timeseriesstack
-        volstring=str(whichcoin+"volume")
-        volumes[volstring]=volumenow
-        time.sleep(3)
+    connectbool=False
+    for x in range(0, num_retries):  
+        # Get the price 
+        for whichcoin in crypto_list:
+            logging.info(whichcoin)
+            geckourl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency="+fiat+"&ids="+whichcoin
+            try:
+                rawlivecoin = requests.get(geckourl,headers=header).json()
+            except requests.exceptions.RequestException as e:
+                logging.info("Issue with CoinGecko")
+                connectbool=True
+                break
+            liveprice = rawlivecoin[0]
+            pricenow= float(liveprice['current_price'])
+            volumenow = float(liveprice['total_volume'])
+            logging.info("Got Live Data From CoinGecko")
+            geckourlhistorical = "https://api.coingecko.com/api/v3/coins/"+whichcoin+"/market_chart/range?vs_currency="+fiat+"&from="+str(starttimeseconds)+"&to="+str(endtimeseconds)
+            #logging.info(geckourlhistorical)
+            time.sleep(3) # a little polite pause to avoid upsetting coingecko
+            try:
+                rawtimeseries = requests.get(geckourlhistorical,headers=header).json()
+                successstring="Got price for the last "+str(days_ago)+" days from CoinGecko"
+                logging.info(successstring)
+            except requests.exceptions.RequestException as e:
+                logging.info("Issue with CoinGecko")
+                connectbool=True
+                break
+            timeseriesarray = rawtimeseries['prices']
+            timeseriesstack = []
+            length=len (timeseriesarray)
+            i=0
+            while i < length:
+                timeseriesstack.append(float (timeseriesarray[i][1]))
+                i+=1
+            timeseriesstack.append(pricenow)
+            allprices[whichcoin] = timeseriesstack
+            volstring=str(whichcoin+"volume")
+            volumes[volstring]=volumenow
+            time.sleep(3)
+
+        if connectbool==True:
+            message="Trying again in ", sleep_time, " seconds"
+            logging.info(message)
+            sleep(sleep_time)  # wait before trying to fetch the data again
+            sleep_time *= 2  # Implement your backoff algorithm here i.e. exponential backoff
+        else:
+            break
     return allprices, volumes
 
 def makeSpark(allprices):
@@ -568,7 +595,7 @@ def listToString(s):
         
         
 def main():
-
+    logging.basicConfig(level=logging.DEBUG)
     args = parse_args()
 
     with open(configfile) as f:
