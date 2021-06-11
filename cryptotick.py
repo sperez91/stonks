@@ -316,13 +316,11 @@ def getData(config):
     """ 
     sleep_time = 10
     num_retries = 5
-
     crypto_list = currencystringtolist(config['ticker']['currency'])
     fiat_list=currencystringtolist(config['ticker']['fiatcurrency'])
     ua = UserAgent()
     header = {'User-Agent':str(ua.chrome)}
     fiat=fiat_list[0]
-    logging.info(crypto_list)
     logging.info("Getting Data")
     days_ago=int(config['ticker']['sparklinedays'])   
     endtime = int(time.time())
@@ -333,7 +331,7 @@ def getData(config):
     volumes = {}
     connectbool=False
     for x in range(0, num_retries):  
-        # Get the price 
+        # Get the price
         for whichcoin in crypto_list:
             logging.info(whichcoin)
             geckourl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency="+fiat+"&ids="+whichcoin
@@ -572,8 +570,10 @@ def parse_args():
 
 def currencystringtolist(currstring):
     # Takes the string for currencies in the config.yaml file and turns it into a list
+    logging.info(currstring)
     curr_list = currstring.split(",")
     curr_list = [x.strip(' ') for x in curr_list]
+    logging.info(curr_list)
     return curr_list
 
 def chunks(lst, n):
@@ -584,10 +584,13 @@ def chunks(lst, n):
 def listToString(s): 
     
     # initialize an empty string
-    str1 = s[0]
+    str1 = str()
+
+    # Pop the first entry on
+    str1=s[0]
     
     # traverse in the string  
-    for i in  range(len(s)): 
+    for i in  range(1,len(s)): 
         str1 += ", "+s[i]  
     
     # return string  
@@ -600,7 +603,6 @@ def main():
 
     with open(configfile) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-
     if not args.virtual:
         from IT8951.display import AutoEPDDisplay
 
