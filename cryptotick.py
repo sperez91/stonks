@@ -417,9 +417,9 @@ def updateDisplay(image,config,allprices, volumes):
 
     if fiat=="jpy":
         symbolstring="¥"
-    height=180
-
-    heightincrement=295
+    scaling=3/(config['ticker']['coinsperpage'])
+    height=int(180*scaling)
+    heightincrement=int(295*scaling)
     for key in allprices.keys():  
         pricenow = allprices[key][-1]
         whichcoin=key
@@ -638,8 +638,9 @@ def main():
                 img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
                 thefunction=random.choices(my_list, weights=weights, k=1)[0]
                 if thefunction=="crypto" and len(curr_list)>=4 and config['display']['maximalist']!=True:
-                    n=3
-                    chunkslist=list(chunks(curr_list,n))
+                    #Coins Per Screen (Consider moving to Config file)
+                    numperpage=config['ticker']['coinsperpage']
+                    chunkslist=list(chunks(curr_list,numperpage))
                     for i in chunkslist:
                         configsubset = config
                         configsubset['ticker']['currency']=listToString(i)
