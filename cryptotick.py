@@ -372,7 +372,7 @@ def getData(config):
         if connectbool==True:
             message="Trying again in ", sleep_time, " seconds"
             logging.info(message)
-            sleep(sleep_time)  # wait before trying to fetch the data again
+            time.sleep(sleep_time)  # wait before trying to fetch the data again
             sleep_time *= 2  # Implement your backoff algorithm here i.e. exponential backoff
         else:
             break
