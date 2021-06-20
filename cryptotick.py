@@ -73,6 +73,7 @@ def textfilequotes(img, config):
     imlogo = Image.open(filename)
     resize = 300,300
     imlogo.thumbnail(resize)
+    img.paste(imlogo,(100, 760))
     # Grab The contents of the quotes file, "quotes.csv"
     data=pd.read_csv(quotesfile, sep='\t')
     print(data.head())
@@ -84,17 +85,17 @@ def textfilequotes(img, config):
         try:
             logging.info("Manual File")
             if  len(source)<=25:
-                fontstring = "JosefinSans-Regular"
+                fontstring = "JosefinSans-Light"
                 y_text= -300
-                height= 110
-                width= 27
-                fontsize=100
+                height= 90
+                width= 37
+                fontsize=80
                 img, numline =writewrappedlines(img,quote,fontsize,y_text,height, width,fontstring)
                 draw = ImageDraw.Draw(img) 
-                draw.line((90,140,174,140), fill=255, width=1)
+                draw.line((500,880, 948,880), fill=255, width=3)
     #           _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-Regular"):
-                _place_text(img,source,0,65,20,"Rajdhani-Regular")
-            if numline<5:
+                _place_text(img,source,0,430,80,"JosefinSans-Light")
+            if numline<7:
                 success=True
                 break
             else:
@@ -103,7 +104,6 @@ def textfilequotes(img, config):
             message="Data pull/print problem"
             pic = beanaproblem(img,str(e))
             success= False
-    img.paste(imlogo,(100, 760))
     return img, success
 
 def redditquotes(img, config):
@@ -177,7 +177,7 @@ def redditquotes(img, config):
                 height= 110
                 width= 27
                 fontsize=100
-                img=writewrappedlines(img,quote,fontsize,y_text,height, width,fontstring)
+                img, numoflines =writewrappedlines(img,quote,fontsize,y_text,height, width,fontstring)
                 source = splitquote[-1]
                 source = source.strip()
                 source = source.strip("-")
@@ -308,7 +308,7 @@ def internet(hostname="google.com"):
         return True
     except:
         logging.info("Google says No")
-        pass
+        time.sleep(1)
     return False
 
 
@@ -558,13 +558,14 @@ def _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-
 
     draw.text((draw_x, draw_y), text, font=font,fill=(0,0,0) )
 
-def writewrappedlines(img,text,fontsize,y_text=-300,height=110, width=27,fontstring="Forum-Regular"):
+def writewrappedlines(img,text,fontsize,y_text=0,height=3, width=15,fontstring="Forum-Regular"):
     lines = textwrap.wrap(text, width)
+    numoflines=0
     for line in lines:
-        width= 0
-        _place_text(img, line,-30, y_text, fontsize,fontstring)
+        _place_text(img, line,0, y_text, fontsize,fontstring)
         y_text += height
-    return img
+        numoflines+=1
+    return img, numoflines
 
 def clear_display(display):
     print('Clearing display...')
