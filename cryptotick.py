@@ -701,6 +701,13 @@ def main():
                     display_image_8bpp(display,img)
                     datapulled = success
                     lastrefresh=time.time()
+        else:
+            # If there's no internet, use the quotes file
+            if (time.time() - lastrefresh > float(config['ticker']['updatefrequency'])) or (datapulled==False):
+                img, success = textfilequotes(img, config)
+                display_image_8bpp(display,img)
+                datapulled = success
+                lastrefresh=time.time()
 
 
             
