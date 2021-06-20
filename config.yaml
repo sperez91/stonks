@@ -11,5 +11,5 @@ ticker:
   sparklinedays: 28
   coinsperpage: 3
 function: 
-  mode: crypto,redditquotes, wordaday, newyorkercartoon, guardianheadlines
-  weight: 20, 1, 0, 0, 0
+  mode: crypto,redditquotes, wordaday, newyorkercartoon, guardianheadlines, textfilequotes
+  weight: 0, 0, 0, 0, 0, 1
