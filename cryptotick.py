@@ -23,12 +23,14 @@ import socket
 import numpy as np
 import matplotlib.pyplot as plt
 import currency
+import pandas as pd
 import logging
 from fake_useragent import UserAgent
 
 dirname = os.path.dirname(__file__)
 configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
 picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'images')
+quotesfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'data/quotes.tsv')
 
 def wordaday(img, config):
     try:
@@ -64,6 +66,45 @@ def wordaday(img, config):
 def socialmetrics(img, config):
     print("get social metrics")
     return img
+
+def textfilequotes(img, config):
+    success=False
+    filename = os.path.join(dirname, 'images/rabbitsq.png')
+    imlogo = Image.open(filename)
+    resize = 300,300
+    imlogo.thumbnail(resize)
+    # Grab The contents of the quotes file, "quotes.csv"
+    data=pd.read_csv(quotesfile, sep='\t')
+    print(data.head())
+    while True:
+        choose=data.sample(replace=True)
+        print(choose)
+        quote=choose.iat[0,0]
+        source=choose.iat[0,1]
+        try:
+            logging.info("Manual File")
+            if  len(source)<=25:
+                fontstring = "JosefinSans-Regular"
+                y_text= -300
+                height= 110
+                width= 27
+                fontsize=100
+                img, numline =writewrappedlines(img,quote,fontsize,y_text,height, width,fontstring)
+                draw = ImageDraw.Draw(img) 
+                draw.line((90,140,174,140), fill=255, width=1)
+    #           _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-Regular"):
+                _place_text(img,source,0,65,20,"Rajdhani-Regular")
+            if numline<5:
+                success=True
+                break
+            else:
+                img = Image.new("RGB", (264,176), color = (255, 255, 255) )
+        except Exception as e:
+            message="Data pull/print problem"
+            pic = beanaproblem(img,str(e))
+            success= False
+    img.paste(imlogo,(100, 760))
+    return img, success
 
 def redditquotes(img, config):
     try:
