@@ -46,7 +46,7 @@ def wordaday(img, config):
         height= 110
         width= 27
         fontsize=180
-        img=writewrappedlines(img,wad,fontsize,y_text,height, width,fontstring)
+        img, numline=writewrappedlines(img,wad,fontsize,y_text,height, width,fontstring)
         img.paste(imlogo,(100, 760))
         wadsummary= d.entries[0].summary
         fontstring="GoudyBookletter1911-Regular"
@@ -54,7 +54,7 @@ def wordaday(img, config):
         height= 80
         width= 40
         fontsize=70
-        img=writewrappedlines(img,wadsummary,fontsize,y_text,height, width,fontstring)
+        img, numline=writewrappedlines(img,wadsummary,fontsize,y_text,height, width,fontstring)
         success=True
     except Exception as e:
         message="Data pull/print problem"
@@ -177,7 +177,7 @@ def redditquotes(img, config):
                 height= 110
                 width= 27
                 fontsize=100
-                img, numoflines =writewrappedlines(img,quote,fontsize,y_text,height, width,fontstring)
+                img, numline =writewrappedlines(img,quote,fontsize,y_text,height, width,fontstring)
                 source = splitquote[-1]
                 source = source.strip()
                 source = source.strip("-")
@@ -213,7 +213,7 @@ def newyorkercartoon(img, config):
         height= 50
         width= 50
         fontsize=60
-        img=writewrappedlines(img,caption,fontsize,y_text,height, width,fontstring)
+        img, numline=writewrappedlines(img,caption,fontsize,y_text,height, width,fontstring)
         success=True
     except Exception as e:
         message="Data pull/print problem"
@@ -243,7 +243,7 @@ def guardianheadlines(img, config):
         height= 140
         width= 27
         fontsize=90
-        img=writewrappedlines(img,text,fontsize,y_text,height, width,fontstring)
+        img, numlines=writewrappedlines(img,text,fontsize,y_text,height, width,fontstring)
         urlstring=d.entries[0].link
         qr = qrcode.QRCode(version=1,error_correction=qrcode.constants.ERROR_CORRECT_L,box_size=3,border=0,)
         qr.add_data(urlstring)
@@ -518,7 +518,7 @@ def updateDisplay(image,config,allprices, volumes):
         height= 100
         width= 37
         fontsize=70
-        image=writewrappedlines(image,text,fontsize,y_text,height, width,fontstring)
+        image, numline=writewrappedlines(image,text,fontsize,y_text,height, width,fontstring)
         urlstring=d.entries[storynum].link
         qr = qrcode.QRCode(version=1,error_correction=qrcode.constants.ERROR_CORRECT_L,box_size=3,border=0,)
         qr.add_data(urlstring)
@@ -598,7 +598,7 @@ def display_image_8bpp(display, img):
     img=img.rotate(180, expand=True)
     display.frame_buf.paste(img, paste_coords)
     display.draw_full(constants.DisplayModes.GC16)
-
+    return
 
 def parse_args():
     p = argparse.ArgumentParser(description='Test EPD functionality')
