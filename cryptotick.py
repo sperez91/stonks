@@ -666,7 +666,7 @@ def main():
     if not args.error:
         pass
     else:
-        img = beanaproblem(display, "This interlude is brought to you by the testing team, and let me tell you, they are testing")
+        img = beanaproblem(display, "This is testing formatting on the page triggered by exceptions.")
         display_image_8bpp(display,img)
         exit(0)
 
