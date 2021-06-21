@@ -57,7 +57,7 @@ def wordaday(img, config):
         img, numline=writewrappedlines(img,wadsummary,fontsize,y_text,height, width,fontstring)
         success=True
     except Exception as e:
-        message="Interlude due to a data pull/print problem (word a day)"
+        message="Interlude due to a data pull/print problem (Word a Day)"
         pic = beanaproblem(img,message)
         success= False
         time.sleep(10)
@@ -101,7 +101,7 @@ def textfilequotes(img, config):
             else:
                 img = Image.new("RGB", (264,176), color = (255, 255, 255) )
         except Exception as e:
-            message="Interlude due to a data pull/print problem (textfile)"
+            message="Interlude due to a data pull/print problem (Text file)"
             pic = beanaproblem(img,message)
             success= False
     return img, success
@@ -189,7 +189,7 @@ def redditquotes(img, config):
                 success=True
                 break
     except Exception as e:
-        message="Interlude due to a data pull/print problem (reddit)"
+        message="Interlude due to a data pull/print problem (Reddit)"
         pic = beanaproblem(img,message)
         success= False
         time.sleep(10)
@@ -216,7 +216,7 @@ def newyorkercartoon(img, config):
         img, numline=writewrappedlines(img,caption,fontsize,y_text,height, width,fontstring)
         success=True
     except Exception as e:
-        message="Interlude due to a data pull/print problem (cartoon)"
+        message="Interlude due to a data pull/print problem (Cartoon)"
         pic = beanaproblem(img,message)
         success= False
         time.sleep(10)
@@ -254,7 +254,7 @@ def guardianheadlines(img, config):
         img.paste(theqr, (1200,930))
         success=True
     except Exception as e:
-        message="Interlude due to a data pull/print problem (headlines)"
+        message="Interlude due to a data pull/print problem (Headlines)"
         pic = beanaproblem(img,message)
         success= False
         time.sleep(10)
@@ -277,7 +277,7 @@ def crypto(img, config):
         time.sleep(.2)
         success=True
     except Exception as e:
-        message="Interlude due to a data pull/print problem (crypto)"
+        message="Interlude due to a data pull/print problem (Crypto)"
         pic = beanaproblem(img,message)
         success= False
         time.sleep(10)
@@ -334,7 +334,7 @@ def beanaproblem(image,message):
     draw = ImageDraw.Draw(image)
     image.paste(thebean, (0,0))
     text=str(time.strftime("%-H:%M %a %-d %b %Y"))
-    _place_text(image, "Updated: "+text, x_offset=-25, y_offset=-390,fontsize=50,fontstring="JosefinSans-Medium")
+    _place_text(image, "Time Stamp: "+text, x_offset=-25, y_offset=-390,fontsize=50,fontstring="JosefinSans-Medium")
     # writewrappedlines(img,text,fontsize,y_text=0,height=60, width=15,fontstring="Forum-Regular"):
     writewrappedlines(image, "Message: "+message,60,-200,70,35)
     return image
