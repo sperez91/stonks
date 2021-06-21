@@ -336,7 +336,7 @@ def beanaproblem(image,message):
     text=str(time.strftime("%-H:%M %a %-d %b %Y"))
     _place_text(image, "Time Stamp: "+text, x_offset=-25, y_offset=-390,fontsize=50,fontstring="JosefinSans-Medium")
     # writewrappedlines(img,text,fontsize,y_text=0,height=60, width=15,fontstring="Forum-Regular"):
-    writewrappedlines(image, "Message: "+message,60,-200,70,35)
+    writewrappedlines(image, "Issue: "+message,60,-200,70,35)
     return image
 
 def display_image_8bpp(display, img):
