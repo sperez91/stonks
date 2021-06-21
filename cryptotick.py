@@ -57,8 +57,8 @@ def wordaday(img, config):
         img, numline=writewrappedlines(img,wadsummary,fontsize,y_text,height, width,fontstring)
         success=True
     except Exception as e:
-        message="Data pull/print problem"
-        pic = beanaproblem(img,str(e))
+        message="Interlude due to a data pull/print problem (word a day)"
+        pic = beanaproblem(img,message)
         success= False
         time.sleep(10)
     return img, success
@@ -101,8 +101,8 @@ def textfilequotes(img, config):
             else:
                 img = Image.new("RGB", (264,176), color = (255, 255, 255) )
         except Exception as e:
-            message="Data pull/print problem"
-            pic = beanaproblem(img,str(e))
+            message="Interlude due to a data pull/print problem (textfile)"
+            pic = beanaproblem(img,message)
             success= False
     return img, success
 
@@ -189,8 +189,8 @@ def redditquotes(img, config):
                 success=True
                 break
     except Exception as e:
-        message="Data pull/print problem"
-        pic = beanaproblem(img,str(e))
+        message="Interlude due to a data pull/print problem (reddit)"
+        pic = beanaproblem(img,message)
         success= False
         time.sleep(10)
     return img, success
@@ -216,8 +216,8 @@ def newyorkercartoon(img, config):
         img, numline=writewrappedlines(img,caption,fontsize,y_text,height, width,fontstring)
         success=True
     except Exception as e:
-        message="Data pull/print problem"
-        pic = beanaproblem(img,str(e))
+        message="Interlude due to a data pull/print problem (cartoon)"
+        pic = beanaproblem(img,message)
         success= False
         time.sleep(10)
     return img, success
@@ -254,8 +254,8 @@ def guardianheadlines(img, config):
         img.paste(theqr, (1200,930))
         success=True
     except Exception as e:
-        message="Data pull/print problem"
-        pic = beanaproblem(img,str(e))
+        message="Interlude due to a data pull/print problem (headlines)"
+        pic = beanaproblem(img,message)
         success= False
         time.sleep(10)
     return img, success
@@ -277,8 +277,8 @@ def crypto(img, config):
         time.sleep(.2)
         success=True
     except Exception as e:
-        logging.info("Data pull/print problem")
-        pic = beanaproblem(img,str(e))
+        message="Interlude due to a data pull/print problem (crypto)"
+        pic = beanaproblem(img,message)
         success= False
         time.sleep(10)
     return pic, success
@@ -332,14 +332,11 @@ def beanaproblem(image,message):
     thebean = Image.open(os.path.join(picdir,'thebean.png'))
     image = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
     draw = ImageDraw.Draw(image)
-    image.paste(thebean, (160,345))
-    text=str(time.strftime("%H:%M %a %d %b %Y"))
+    image.paste(thebean, (0,0))
+    text=str(time.strftime("%-H:%M %a %-d %b %Y"))
     _place_text(image, "Updated: "+text, x_offset=-25, y_offset=-390,fontsize=50,fontstring="JosefinSans-Medium")
-    writewrappedlines(image, "Message: "+message,70)
-    thebean.close()
-#   Reload last good config.yaml
-    with open(configfile) as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
+    # writewrappedlines(img,text,fontsize,y_text=0,height=60, width=15,fontstring="Forum-Regular"):
+    writewrappedlines(image, "Message: "+message,60,-200,70,35)
     return image
 
 def display_image_8bpp(display, img):
@@ -558,7 +555,7 @@ def _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-
 
     draw.text((draw_x, draw_y), text, font=font,fill=(0,0,0) )
 
-def writewrappedlines(img,text,fontsize,y_text=0,height=3, width=15,fontstring="Forum-Regular"):
+def writewrappedlines(img,text,fontsize,y_text=0,height=60, width=15,fontstring="Forum-Regular"):
     lines = textwrap.wrap(text, width)
     numoflines=0
     for line in lines:
@@ -608,6 +605,9 @@ def parse_args():
                         'physical device)')
     p.add_argument('-r', '--rotate', default=None, choices=['CW', 'CCW', 'flip'],
                    help='run the tests with the display rotated by the specified value')
+    p.add_argument('-e', '--error', action='store_true',
+                   help='Brings up the error screen for formatting')
+
     return p.parse_args()
 
 def currencystringtolist(currstring):
@@ -645,6 +645,7 @@ def main():
 
     with open(configfile) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
+
     if not args.virtual:
         from IT8951.display import AutoEPDDisplay
 
@@ -661,7 +662,13 @@ def main():
     else:
         from IT8951.display import VirtualEPDDisplay
         display = VirtualEPDDisplay(dims=(800, 600), rotate=args.rotate)
-    
+
+    if not args.error:
+        pass
+    else:
+        img = beanaproblem(display, "This interlude is brought to you by the testing team, and let me tell you, they are testing")
+        display_image_8bpp(display,img)
+        exit(0)
 
     my_list = currencystringtolist(config['function']['mode'])
     weightstring = currencystringtolist(config['function']['weight'])
