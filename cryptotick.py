@@ -185,7 +185,7 @@ def redditquotes(img, config):
                 draw = ImageDraw.Draw(img) 
                 draw.line((500,880, 948,880), fill=255, width=3)
     #           _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-Regular"):
-                _place_text(img,source,0,430,80,"JosefinSans-Light")
+                _place_text(img,source,0,430,60,"JosefinSans-Light")
                 success=True
                 break
     except Exception as e:
@@ -333,7 +333,7 @@ def beanaproblem(image,message):
     image = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
     draw = ImageDraw.Draw(image)
     image.paste(thebean, (0,0))
-    text=str(time.strftime("%-H:%M %a %-d %b %Y"))
+    text=str(time.strftime("%-I:%M %p, %-d %b %Y"))
     _place_text(image, "Time Stamp: "+text, x_offset=-25, y_offset=-390,fontsize=50,fontstring="JosefinSans-Medium")
     # writewrappedlines(img,text,fontsize,y_text=0,height=60, width=15,fontstring="Forum-Regular"):
     writewrappedlines(image, "Issue: "+message,60,-200,70,35)
@@ -501,7 +501,7 @@ def updateDisplay(image,config,allprices, volumes):
         text=pricechange + " vol:" + symbolstring + vol
         _place_text(image, text, x_offset=-175, y_offset=height-315,fontsize=50,fontstring="JosefinSans-Light")
         height += heightincrement
-    text=str(time.strftime("%-H:%M %a %-d %b %Y"))
+    text=str(time.strftime("%-I:%M %p, %-d %b %Y"))
     _place_text(image, "Updated: "+text+". "+str(days_ago)+" day data", x_offset=-25, y_offset=-400,fontsize=50,fontstring="JosefinSans-Medium")
     if config['display']['maximalist']==True:
         print("I AM MAXIMAL")
