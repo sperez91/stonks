@@ -32,6 +32,30 @@ configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.ya
 picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'images')
 quotesfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'data/quotes.tsv')
 
+def mempool(img, config):
+    feesurl='https://mempool.space/api/v1/fees/recommended'
+    rawmempoolfees = requests.get(feesurl).json()
+    fontstring = "JosefinSans-Regular"
+    y_text= -65
+    height= 80
+    width= 80
+    fontsize=60
+    mempoolstring = "         "+str()+"          "+str(rawmempoolfees['halfHourFee'])+"          "+str(rawmempoolfees['hourFee'])
+    mempoolkey = "Fees:     High, sat/vB       Medium, sat/vB       Low, sat/vB"
+#    _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-Regular"):
+   # _place_text(img,str(rawmempoolfees['fastestFee']),-600,420,40,"JosefinSans-Light")
+   # _place_text(img,str(rawmempoolfees['halfHourFee']),-600,460,40,"JosefinSans-Light")
+    _place_text(img,str(rawmempoolfees['hourFee'])+" sat/vB fee", x_offset=-175, y_offset=-85,fontsize=50,fontstring="JosefinSans-Light")
+    fontstring = "JosefinSans-Light"
+    y_text= -40
+    height= 80
+    width= 80
+    fontsize=40
+#   img, numline=writewrappedlines(img,mempoolkey,fontsize,y_text,height, width,fontstring)
+    success=True
+    return img, success
+
+
 def wordaday(img, config):
     try:
         print("get word a day")
@@ -175,8 +199,8 @@ def redditquotes(img, config):
                 fontstring = "JosefinSans-Light"
                 y_text= -300
                 height= 110
-                width= 27
-                fontsize=100
+                width= 37
+                fontsize=80
                 img, numline =writewrappedlines(img,quote,fontsize,y_text,height, width,fontstring)
                 source = splitquote[-1]
                 source = source.strip()
@@ -504,12 +528,12 @@ def updateDisplay(image,config,allprices, volumes):
     text=str(time.strftime("%-I:%M %p, %-d %b %Y"))
     _place_text(image, "Updated: "+text+". "+str(days_ago)+" day data", x_offset=-25, y_offset=-400,fontsize=50,fontstring="JosefinSans-Medium")
     if config['display']['maximalist']==True:
-        print("I AM MAXIMAL")
+        image, success=mempool(image, config)
         d = feedparser.parse(config['display']['feedurl'])
         print("STORIES:"+str(len(d.entries)))
         storynum=randrange(len(d.entries)-1)
         text=d.entries[storynum].title
-        text=re.sub(r'&uArr; ', '', text)
+#        text=re.sub(r'&uArr; ', '', text)
         fontstring="JosefinSans-Light"
         y_text=125
         height= 100
@@ -661,7 +685,7 @@ def main():
 
     else:
         from IT8951.display import VirtualEPDDisplay
-        display = VirtualEPDDisplay(dims=(800, 600), rotate=args.rotate)
+        display = VirtualEPDDisplay(dims=(1448, 1072), rotate=args.rotate)
 
     if not args.error:
         pass
