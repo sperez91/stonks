@@ -294,15 +294,16 @@ def crypto(img, config):
         logging.info("FULL UPDATE")
         allprices, volumes=getData(config)
         # generate sparkline
-        print("SPARKY")
+        print("SPARKLINES")
         makeSpark(allprices)
+        logging.info("NOW DISPLAY")
         # update display
         pic=updateDisplay(img,config, allprices, volumes)
         time.sleep(.2)
         success=True
     except Exception as e:
         message="Interlude due to a data pull/print problem (Crypto)"
-        pic = beanaproblem(img,message)
+        pic = beanaproblem(img,str(e))
         success= False
         time.sleep(10)
     return pic, success
@@ -382,7 +383,7 @@ def getData(config):
     fiat_list=currencystringtolist(config['ticker']['fiatcurrency'])
     ua = UserAgent()
     header = {'User-Agent':str(ua.chrome)}
-    fiat=fiat_list[0]
+
     logging.info("Getting Data")
     days_ago=int(config['ticker']['sparklinedays'])   
     endtime = int(time.time())
@@ -394,7 +395,10 @@ def getData(config):
     connectbool=False
     for x in range(0, num_retries):  
         # Get the price
-        for whichcoin in crypto_list:
+        for i in range(len(crypto_list)):
+            print("i="+str(i))
+            fiat=fiat_list[i]
+            whichcoin=crypto_list[i]
             logging.info(whichcoin)
             geckourl = "https://api.coingecko.com/api/v3/coins/markets?vs_currency="+fiat+"&ids="+whichcoin
             try:
@@ -426,8 +430,9 @@ def getData(config):
                 timeseriesstack.append(float (timeseriesarray[i][1]))
                 i+=1
             timeseriesstack.append(pricenow)
-            allprices[whichcoin] = timeseriesstack
-            volstring=str(whichcoin+"volume")
+            allprices[str(whichcoin+fiat)] = timeseriesstack
+            logging.info(str(whichcoin+fiat))
+            volstring=str(str(whichcoin+fiat)+"volume")
             volumes[volstring]=volumenow
             time.sleep(3)
 
@@ -444,7 +449,9 @@ def makeSpark(allprices):
     # Draw and save the sparkline that represents historical data
 
     # Subtract the mean from the sparkline to make the mean appear on the plot (it's really the x axis)    
+    logging.info("Update Sparks")    
     for key in allprices.keys():   
+        logging.info(key)    
         x = allprices[key]-np.mean(allprices[key])
 
         fig, ax = plt.subplots(1,1,figsize=(10,3))
@@ -461,6 +468,7 @@ def makeSpark(allprices):
         # Save the resulting bmp file to the images directory
         plt.savefig(os.path.join(picdir, key+'spark.png'), dpi=72)
         plt.clf() # Close plot to prevent memory error
+    return
 
 
 def updateDisplay(image,config,allprices, volumes):
@@ -469,20 +477,25 @@ def updateDisplay(image,config,allprices, volumes):
     if config is re-written following adustment we could avoid passing the last two arguments as
     they will just be the first two items of their string in config 
     """
+    logging.info("Update Display")
     crypto_list = currencystringtolist(config['ticker']['currency'])
     fiat_list=currencystringtolist(config['ticker']['fiatcurrency'])
-    fiat=fiat_list[0]
-    days_ago=int(config['ticker']['sparklinedays'])   
-    symbolstring=currency.symbol(fiat.upper())
 
-    if fiat=="jpy":
-        symbolstring="¥"
+    days_ago=int(config['ticker']['sparklinedays'])   
     scaling=3/(config['ticker']['coinsperpage'])
     height=int(180*scaling)
     heightincrement=int(295*scaling)
-    for key in allprices.keys():  
+    index=0
+    for key in allprices.keys():
+        logging.info(key)
         pricenow = allprices[key][-1]
-        whichcoin=key
+        fiat=fiat_list[index]
+        if fiat=="jpy":
+            symbolstring="¥"
+        else:
+            symbolstring=currency.symbol(fiat.upper())
+        whichcoin=crypto_list[index]        
+        logging.info(whichcoin)
         currencythumbnail= 'currency/'+whichcoin+'.png'
         tokenfilename = os.path.join(picdir,currencythumbnail)
         sparkpng = Image.open(os.path.join(picdir,key+'spark.png'))
@@ -525,6 +538,7 @@ def updateDisplay(image,config,allprices, volumes):
         text=pricechange + " vol:" + symbolstring + vol
         _place_text(image, text, x_offset=-175, y_offset=height-315,fontsize=50,fontstring="JosefinSans-Light")
         height += heightincrement
+        index += 1
     text=str(time.strftime("%-I:%M %p, %-d %b %Y"))
     _place_text(image, "Updated: "+text+". "+str(days_ago)+" day data", x_offset=-25, y_offset=-400,fontsize=50,fontstring="JosefinSans-Medium")
     if config['display']['maximalist']==True:
