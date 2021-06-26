@@ -706,42 +706,35 @@ def main():
     if config['display']['maximalist']==True:
             config['ticker']['currency']=curr_list [0]
     datapulled=False
+    while internet()==False:
+        logging.info("Waiting for Internet")
+        time.sleep(1)
     lastrefresh = time.time()
     while True:
-        if internet():
-            if (time.time() - lastrefresh > float(config['ticker']['updatefrequency'])) or (datapulled==False):
-                img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-                thefunction=random.choices(my_list, weights=weights, k=1)[0]
-                if thefunction=="crypto" and len(curr_list)>=4 and config['display']['maximalist']!=True:
-                    #Coins Per Screen (Consider moving to Config file)
-                    numperpage=config['ticker']['coinsperpage']
-                    chunkslist=list(chunks(curr_list,numperpage))
-                    for i in chunkslist:
-                        configsubset = config
-                        configsubset['ticker']['currency']=listToString(i)
-                        img, success = eval(thefunction+"(img,configsubset)")
-                        display_image_8bpp(display,img)
-                        img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-                        lastrefresh=time.time()
-                        if success==True:
-                            time.sleep(int(config['ticker']['updatefrequency']))
-                    datapulled = success
-                    
-                else:
-                    img, success = eval(thefunction+"(img,config)")
+        if (time.time() - lastrefresh > float(config['ticker']['updatefrequency'])) or (datapulled==False):
+            img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+            thefunction=random.choices(my_list, weights=weights, k=1)[0]
+            if thefunction=="crypto" and len(curr_list)>=4 and config['display']['maximalist']!=True:
+                #Coins Per Screen (Consider moving to Config file)
+                numperpage=config['ticker']['coinsperpage']
+                chunkslist=list(chunks(curr_list,numperpage))
+                for i in chunkslist:
+                    configsubset = config
+                    configsubset['ticker']['currency']=listToString(i)
+                    img, success = eval(thefunction+"(img,configsubset)")
                     display_image_8bpp(display,img)
-                    datapulled = success
+                    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
                     lastrefresh=time.time()
-        else:
-            # If there's no internet, use the quotes file
-            if (time.time() - lastrefresh > float(config['ticker']['updatefrequency'])) or (datapulled==False):
-                img, success = textfilequotes(img, config)
+                    if success==True:
+                        time.sleep(int(config['ticker']['updatefrequency']))
+                datapulled = success
+                
+            else:
+                img, success = eval(thefunction+"(img,config)")
                 display_image_8bpp(display,img)
                 datapulled = success
                 lastrefresh=time.time()
 
-
-            
 
 if __name__ == '__main__':
     main()
