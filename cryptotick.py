@@ -720,12 +720,18 @@ def main():
     if config['display']['maximalist']==True:
             config['ticker']['currency']=curr_list [0]
     datapulled=False
+#   Update frequency sanity check
+    if float(config['ticker']['updatefrequency'])<180:
+        logging.info("Throttling update frequency to 180 seconds")  
+        updatefrequency=180.0
+    else:
+        updatefrequency=float(config['ticker']['updatefrequency'])
     while internet()==False:
         logging.info("Waiting for Internet")
         time.sleep(1)
     lastrefresh = time.time()
     while True:
-        if (time.time() - lastrefresh > float(config['ticker']['updatefrequency'])) or (datapulled==False):
+        if (time.time() - lastrefresh > updatefrequency) or (datapulled==False):
             img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
             thefunction=random.choices(my_list, weights=weights, k=1)[0]
             if thefunction=="crypto" and len(curr_list)>=4 and config['display']['maximalist']!=True:
@@ -739,9 +745,8 @@ def main():
                     display_image_8bpp(display,img)
                     img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
                     lastrefresh=time.time()
-                    if success==True:
-                        time.sleep(int(config['ticker']['updatefrequency']))
                 datapulled = success
+                time.sleep(1)
                 
             else:
                 img, success = eval(thefunction+"(img,config)")
