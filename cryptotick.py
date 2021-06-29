@@ -35,23 +35,7 @@ quotesfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'data/quot
 def mempool(img, config):
     feesurl='https://mempool.space/api/v1/fees/recommended'
     rawmempoolfees = requests.get(feesurl).json()
-    fontstring = "JosefinSans-Regular"
-    y_text= -65
-    height= 80
-    width= 80
-    fontsize=60
-    mempoolstring = "         "+str()+"          "+str(rawmempoolfees['halfHourFee'])+"          "+str(rawmempoolfees['hourFee'])
-    mempoolkey = "Fees:     High, sat/vB       Medium, sat/vB       Low, sat/vB"
-#    _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-Regular"):
-   # _place_text(img,str(rawmempoolfees['fastestFee']),-600,420,40,"JosefinSans-Light")
-   # _place_text(img,str(rawmempoolfees['halfHourFee']),-600,460,40,"JosefinSans-Light")
-    _place_text(img,str(rawmempoolfees['hourFee'])+" sat/vB fee", x_offset=-175, y_offset=-85,fontsize=50,fontstring="JosefinSans-Light")
-    fontstring = "JosefinSans-Light"
-    y_text= -40
-    height= 80
-    width= 80
-    fontsize=40
-#   img, numline=writewrappedlines(img,mempoolkey,fontsize,y_text,height, width,fontstring)
+    _place_text(img,str(rawmempoolfees['hourFee'])+" sat/vB fee", x_offset=-175, y_offset=-105,fontsize=50,fontstring="JosefinSans-Light")
     success=True
     return img, success
 
@@ -483,7 +467,7 @@ def updateDisplay(image,config,allprices, volumes):
 
     days_ago=int(config['ticker']['sparklinedays'])   
     scaling=3/(config['ticker']['coinsperpage'])
-    height=int(180*scaling)
+    height=int(150*scaling)
     heightincrement=int(295*scaling)
     index=0
     for key in allprices.keys():
@@ -540,7 +524,7 @@ def updateDisplay(image,config,allprices, volumes):
         height += heightincrement
         index += 1
     text=str(time.strftime("%-I:%M %p, %-d %b %Y"))
-    _place_text(image, "Updated: "+text+". "+str(days_ago)+" day data", x_offset=-25, y_offset=-400,fontsize=50,fontstring="JosefinSans-Medium")
+    _place_text(image, "Updated: "+text+". "+str(days_ago)+" day data", x_offset=-25, y_offset=-430,fontsize=50,fontstring="JosefinSans-Medium")
     if config['display']['maximalist']==True:
         image, success=mempool(image, config)
         d = feedparser.parse(config['display']['feedurl'])
@@ -549,7 +533,7 @@ def updateDisplay(image,config,allprices, volumes):
         text=d.entries[storynum].title
 #        text=re.sub(r'&uArr; ', '', text)
         fontstring="JosefinSans-Light"
-        y_text=125
+        y_text=45
         height= 100
         width= 37
         fontsize=70
@@ -561,7 +545,7 @@ def updateDisplay(image,config,allprices, volumes):
         theqr = qr.make_image(fill_color="#FFFFFF", back_color="#000000")
         MAX_SIZE=(150,150)
         theqr.thumbnail(MAX_SIZE)
-        image.paste(theqr, (1200,930))
+        image.paste(theqr, (1200,880))
     return image
 
 
