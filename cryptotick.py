@@ -513,14 +513,15 @@ def updateDisplay(image,config,allprices, volumes):
         image.paste(tokenimage, (85,height+30))
 
         text=symbolstring+pricenowstring
+        logging.info(symbolstring)
         if len(text)>7:
             pricefontsize=120
         else:
             pricefontsize=130
-        _place_text(image, text, x_offset=-175, y_offset=height-400,fontsize=pricefontsize,fontstring="JosefinSans-Light")
+        _place_text(image, text, x_offset=-175, y_offset=height-410,fontsize=pricefontsize,fontstring="Roboto-Light")
         vol = human_format(volumes[key+"volume"])
         text=pricechange + " vol:" + symbolstring + vol
-        _place_text(image, text, x_offset=-175, y_offset=height-315,fontsize=50,fontstring="JosefinSans-Light")
+        _place_text(image, text, x_offset=-175, y_offset=height-300,fontsize=50,fontstring="Roboto-Light")
         height += heightincrement
         index += 1
     text=str(time.strftime("%-I:%M %p, %-d %b %Y"))
