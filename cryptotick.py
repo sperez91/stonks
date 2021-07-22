@@ -518,10 +518,10 @@ def updateDisplay(image,config,allprices, volumes):
             pricefontsize=120
         else:
             pricefontsize=130
-        _place_text(image, text, x_offset=-175, y_offset=height-410,fontsize=pricefontsize,fontstring="Roboto-Light")
+        _place_text(image, text, x_offset=-175, y_offset=height-420,fontsize=pricefontsize,fontstring="Roboto-Light")
         vol = human_format(volumes[key+"volume"])
         text=pricechange + " vol:" + symbolstring + vol
-        _place_text(image, text, x_offset=-175, y_offset=height-300,fontsize=50,fontstring="Roboto-Light")
+        _place_text(image, text, x_offset=-175, y_offset=height-310,fontsize=50,fontstring="Roboto-Light")
         height += heightincrement
         index += 1
     text=str(time.strftime("%-I:%M %p, %-d %b %Y"))
