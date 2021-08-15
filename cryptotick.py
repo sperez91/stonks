@@ -509,7 +509,6 @@ def updateDisplay(image,config,allprices, volumes):
         draw = ImageDraw.Draw(image)   
         image.paste(sparkpng, (705,height+40))
         image.paste(tokenimage, (85,height+30))
-
         text=symbolstring+pricenowstring
         logging.info(symbolstring)
         if len(text)>7:
@@ -520,6 +519,9 @@ def updateDisplay(image,config,allprices, volumes):
         vol = human_format(volumes[key+"volume"])
         text=pricechange + " vol:" + symbolstring + vol
         _place_text(image, text, x_offset=-175, y_offset=height-310,fontsize=50,fontstring="Roboto-Light")
+        if 'coinnames' in config['display'] and config['display']['coinnames']:
+            _place_text(image, whichcoin, x_offset=-175, y_offset=height-500,fontsize=50,fontstring="Roboto-Light")
+            logging.info("names")
         height += heightincrement
         index += 1
     text=str(time.strftime("%-I:%M %p, %-d %b %Y"))
