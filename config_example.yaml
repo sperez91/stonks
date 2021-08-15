@@ -3,6 +3,7 @@ display:
   maximalist: true
   feedurl: https://news.bitcoin.com/feed/
   vcom: -2.61
+  coinnames: false
 ticker:
   currency: bitcoin
   exchange: default
