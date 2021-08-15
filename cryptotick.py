@@ -503,9 +503,9 @@ def updateDisplay(image,config,allprices, volumes):
         if pricenow > 1000:
             pricenowstring =str(format(int(pricenow),","))
         elif pricenow < 1000 and d == -1:
-            pricenowstring =str(float('%.2f' % pricenow))
+            pricenowstring ="{:.2f}".format(pricenow)
         else:
-            pricenowstring =str(float('%.5g' % pricenow))
+            pricenowstring ="{:.5g}".format(pricenow)
         draw = ImageDraw.Draw(image)   
         image.paste(sparkpng, (705,height+40))
         image.paste(tokenimage, (85,height+30))
