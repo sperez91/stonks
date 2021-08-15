@@ -1,8 +1,3 @@
-# Big Audrey
-
-This is the code for Audrey, running on a Raspberry Pi, connected to a 6inch HD (Waveshare) screen.
-
-![Action Shot](/images/AudreyVid.jpg)
 [![YouTube Channel Views](https://img.shields.io/youtube/channel/views/UCz5BOU9J9pB_O0B8-rDjCWQ?label=YouTube&style=social)](https://www.youtube.com/channel/UCz5BOU9J9pB_O0B8-rDjCWQ)
 
 # Audrey: Quiet bringer of the internets.
