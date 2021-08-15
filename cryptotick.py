@@ -2,7 +2,7 @@ from time import sleep
 from random import randrange
 import argparse
 import PIL
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont,  ImageOps
 from sys import path
 from IT8951 import constants
 import matplotlib 
@@ -26,7 +26,7 @@ import currency
 import pandas as pd
 import logging
 from fake_useragent import UserAgent
-
+import decimal
 dirname = os.path.dirname(__file__)
 configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.yaml')
 picdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'images')
@@ -348,14 +348,6 @@ def beanaproblem(image,message):
     writewrappedlines(image, "Issue: "+message,60,-200,70,35)
     return image
 
-def display_image_8bpp(display, img):
-    dims = (display.width, display.height)
-    img.thumbnail(dims)
-    paste_coords = [dims[i] - img.size[i] for i in (0,1)]  # align image with bottom of display
-    img=img.rotate(180, expand=True)
-    display.frame_buf.paste(img, paste_coords)
-    display.draw_full(constants.DisplayModes.GC16)
-
 
 def getData(config):
     """
@@ -480,7 +472,10 @@ def updateDisplay(image,config,allprices, volumes):
             symbolstring=currency.symbol(fiat.upper())
         whichcoin=crypto_list[index]        
         logging.info(whichcoin)
-        currencythumbnail= 'currency/'+whichcoin+'.png'
+        if config['display']['inverted'] == True:
+            currencythumbnail= 'currency/'+whichcoin+'INV.png'
+        else:
+            currencythumbnail= 'currency/'+whichcoin+'.png'
         tokenfilename = os.path.join(picdir,currencythumbnail)
         sparkpng = Image.open(os.path.join(picdir,key+'spark.png'))
     #   Check for token image, if there isn't one, get on off coingecko, resize it and pop it on a white background
@@ -493,22 +488,25 @@ def updateDisplay(image,config,allprices, volumes):
             rawimage = requests.get(tokenimageurl).json()
             tokenimage = Image.open(requests.get(rawimage['image']['large'], stream=True).raw)
             tokenimage = tokenimage.convert("RGBA")
+            if config['display']['inverted'] == True:
+                #PIL doesnt like to invert binary images, so convert to RGB, invert and then convert back to RGBA
+                tokenimage = ImageOps.invert( tokenimage.convert('RGB') )
+                tokenimage = tokenimage.convert('RGBA')
             new_image = Image.new("RGBA", (290,290), "WHITE") # Create a white rgba background with a 10 pixel border
             new_image.paste(tokenimage, (20, 20), tokenimage)   
             tokenimage=new_image
             tokenimage.save(tokenfilename)
         newsize=(200,200)
-        tokenimage.thumbnail(newsize,Image.ANTIALIAS) 
-
+        tokenimage.thumbnail(newsize,Image.ANTIALIAS)
         pricechange = str("%+d" % round((allprices[key][-1]-allprices[key][0])/allprices[key][-1]*100,2))+"%"
+        d = decimal.Decimal(str(pricenow)).as_tuple().exponent
         if pricenow > 1000:
-            pricenowstring =format(int(pricenow),",")
+            pricenowstring =str(format(int(pricenow),","))
+        elif pricenow < 1000 and d == -1:
+            pricenowstring =str(float('%.2f' % pricenow))
         else:
             pricenowstring =str(float('%.5g' % pricenow))
-
         draw = ImageDraw.Draw(image)   
- #       draw.text((110,90),str(days_ago)+"day : "+pricechange,font =font_date,fill = 0)
-        # Print price to 5 significant figures
         image.paste(sparkpng, (705,height+40))
         image.paste(tokenimage, (85,height+30))
 
@@ -610,12 +608,14 @@ def by_size(words, size):
     return [word for word in words if len(word) <= size]
 
 
-def display_image_8bpp(display, img):
+def display_image_8bpp(display, img, config):
 
     dims = (display.width, display.height)
     img.thumbnail(dims)
     paste_coords = [dims[i] - img.size[i] for i in (0,1)]  # align image with bottom of display
     img=img.rotate(180, expand=True)
+    if config['display']['inverted']==True:
+        img = ImageOps.invert(img)
     display.frame_buf.paste(img, paste_coords)
     display.draw_full(constants.DisplayModes.GC16)
     return
@@ -690,7 +690,7 @@ def main():
         pass
     else:
         img = beanaproblem(display, "This is testing formatting on the page triggered by exceptions.")
-        display_image_8bpp(display,img)
+        display_image_8bpp(display,img, config)
         exit(0)
 
     my_list = currencystringtolist(config['function']['mode'])
@@ -727,7 +727,7 @@ def main():
                     configsubset = config
                     configsubset['ticker']['currency']=listToString(i)
                     img, success = eval(thefunction+"(img,configsubset)")
-                    display_image_8bpp(display,img)
+                    display_image_8bpp(display,img, config)
                     img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
                     lastrefresh=time.time()
                 datapulled = success
@@ -735,7 +735,7 @@ def main():
                 
             else:
                 img, success = eval(thefunction+"(img,config)")
-                display_image_8bpp(display,img)
+                display_image_8bpp(display,img, config)
                 datapulled = success
                 lastrefresh=time.time()
 
