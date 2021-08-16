@@ -718,6 +718,7 @@ def main():
         time.sleep(1)
     lastrefresh = time.time()
     while True:
+        starttime = time.time()
         img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
         thefunction=random.choices(my_list, weights=weights, k=1)[0]
         if thefunction=="crypto" and len(curr_list)>=4 and config['display']['maximalist']!=True:
@@ -737,8 +738,12 @@ def main():
             display_image_8bpp(display,img, config)
             datapulled = success
             lastrefresh=time.time()
+        endtime = time.time()
         if datapulled==True:
-            time.sleep(updatefrequency)
+            diff = (endtime - starttime)
+            # Sleep for update frequency, minus processing time
+            sleepfor = updatefrequency-int(diff)
+            time.sleep(sleepfor)
         else:
             time.sleep(5)
 
