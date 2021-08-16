@@ -740,7 +740,7 @@ def main():
                 display_image_8bpp(display,img, config)
                 datapulled = success
                 lastrefresh=time.time()
-
+        time.sleep(5) # A dignified pause to prevent resource greed
 
 if __name__ == '__main__':
     main()
