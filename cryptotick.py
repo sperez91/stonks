@@ -718,29 +718,30 @@ def main():
         time.sleep(1)
     lastrefresh = time.time()
     while True:
-        if (time.time() - lastrefresh > updatefrequency) or (datapulled==False):
-            img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-            thefunction=random.choices(my_list, weights=weights, k=1)[0]
-            if thefunction=="crypto" and len(curr_list)>=4 and config['display']['maximalist']!=True:
-                #Coins Per Screen (Consider moving to Config file)
-                numperpage=config['ticker']['coinsperpage']
-                chunkslist=list(chunks(curr_list,numperpage))
-                for i in chunkslist:
-                    configsubset = config
-                    configsubset['ticker']['currency']=listToString(i)
-                    img, success = eval(thefunction+"(img,configsubset)")
-                    display_image_8bpp(display,img, config)
-                    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-                    lastrefresh=time.time()
-                datapulled = success
-                time.sleep(1)
-                
-            else:
-                img, success = eval(thefunction+"(img,config)")
+        img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+        thefunction=random.choices(my_list, weights=weights, k=1)[0]
+        if thefunction=="crypto" and len(curr_list)>=4 and config['display']['maximalist']!=True:
+            #Coins Per Screen (Consider moving to Config file)
+            numperpage=config['ticker']['coinsperpage']
+            chunkslist=list(chunks(curr_list,numperpage))
+            for i in chunkslist:
+                configsubset = config
+                configsubset['ticker']['currency']=listToString(i)
+                img, success = eval(thefunction+"(img,configsubset)")
                 display_image_8bpp(display,img, config)
-                datapulled = success
+                img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
                 lastrefresh=time.time()
-        time.sleep(5) # A dignified pause to prevent resource greed
+            datapulled = success         
+        else:
+            img, success = eval(thefunction+"(img,config)")
+            display_image_8bpp(display,img, config)
+            datapulled = success
+            lastrefresh=time.time()
+        if datapulled==True:
+            time.sleep(updatefrequency)
+        else:
+            time.sleep(5)
+
 
 if __name__ == '__main__':
     main()
