@@ -712,35 +712,45 @@ def main():
         logging.info("Waiting for Internet")
         time.sleep(1)
     lastrefresh = time.time()
-    while True:
-        starttime = time.time()
-        img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-        thefunction=random.choices(my_list, weights=weights, k=1)[0]
-        if thefunction=="crypto" and len(curr_list)>=4 and config['display']['maximalist']!=True:
-            #Coins Per Screen (Consider moving to Config file)
-            numperpage=config['ticker']['coinsperpage']
-            chunkslist=list(chunks(curr_list,numperpage))
-            for i in chunkslist:
-                configsubset = config
-                configsubset['ticker']['currency']=listToString(i)
-                img, success = eval(thefunction+"(img,configsubset)")
+    try:
+        while True:
+            starttime = time.time()
+            img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+            thefunction=random.choices(my_list, weights=weights, k=1)[0]
+            if thefunction=="crypto" and len(curr_list)>=4 and config['display']['maximalist']!=True:
+                #Coins Per Screen (Consider moving to Config file)
+                numperpage=config['ticker']['coinsperpage']
+                chunkslist=list(chunks(curr_list,numperpage))
+                for i in chunkslist:
+                    configsubset = config
+                    configsubset['ticker']['currency']=listToString(i)
+                    img, success = eval(thefunction+"(img,configsubset)")
+                    display_image_8bpp(display,img, config)
+                    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+                    lastrefresh=time.time()
+                datapulled = success         
+            else:
+                img, success = eval(thefunction+"(img,config)")
                 display_image_8bpp(display,img, config)
-                img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+                datapulled = success
                 lastrefresh=time.time()
-            datapulled = success         
-        else:
-            img, success = eval(thefunction+"(img,config)")
-            display_image_8bpp(display,img, config)
-            datapulled = success
-            lastrefresh=time.time()
-        endtime = time.time()
-        if datapulled==True:
-            diff = (endtime - starttime)
-            # Sleep for update frequency, minus processing time
-            sleepfor = updatefrequency-int(diff)
-            time.sleep(sleepfor)
-        else:
-            time.sleep(5)
+            endtime = time.time()
+            if datapulled==True:
+                diff = (endtime - starttime)
+                # Sleep for update frequency, minus processing time
+                sleepfor = updatefrequency-int(diff)
+                time.sleep(sleepfor)
+            else:
+                time.sleep(5)
+    except Exception as e:
+        logging.error(e)
+        img=beanaproblem(img,str(e)+" Line: "+str(e.__traceback__.tb_lineno))
+        display_image_8bpp(display,img,config)  
+    except KeyboardInterrupt:    
+        logging.info("ctrl + c:")
+        img=beanaproblem(img,"Keyboard Interrupt")
+        display_image_8bpp(display,img, config)
+        exit()
 
 
 if __name__ == '__main__':
