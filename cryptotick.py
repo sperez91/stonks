@@ -587,11 +587,6 @@ def writewrappedlines(img,text,fontsize,y_text=0,height=60, width=15,fontstring=
         numoflines+=1
     return img, numoflines
 
-def clear_display(display):
-    print('Clearing display...')
-    display.clear()
-
-
 def nth_repl(s, sub, repl, n):
     find = s.find(sub)
     # If find is not -1 we have found at least one match for the substring
