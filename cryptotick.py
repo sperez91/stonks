@@ -337,15 +337,12 @@ def clear_display(display):
     display.clear()
 
 def beanaproblem(image,message):
-#   A visual cue that the wheels have fallen off
-    thebean = Image.open(os.path.join(picdir,'thebean.png'))
-    image = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-    draw = ImageDraw.Draw(image)
-    image.paste(thebean, (0,0))
-    text=str(time.strftime("%-I:%M %p, %-d %b %Y"))
-    _place_text(image, "Time Stamp: "+text, x_offset=-25, y_offset=-390,fontsize=50,fontstring="JosefinSans-Medium")
-    # writewrappedlines(img,text,fontsize,y_text=0,height=60, width=15,fontstring="Forum-Regular"):
-    writewrappedlines(image, "Issue: "+message,60,-200,70,35)
+#   A visual cue that there was an issue on the last update
+    thealert = Image.open(os.path.join(picdir,'arrow.png'))
+#   Migrating from the rather dramatic issue screen to drawing attention to the last
+#   update time. The persistent display takes care of the rest.
+    image.paste(thealert, (390,123))
+#   Message as QR code to improve error diagnosis
     return image
 
 
