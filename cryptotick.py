@@ -763,7 +763,7 @@ def main():
             if datapulled==True:
                 diff = (endtime - starttime)
                 # Sleep for update frequency, minus processing time
-                sleepfor = updatefrequency-int(diff)
+                sleepfor = max(1,updatefrequency-int(diff))
                 time.sleep(sleepfor)
             else:
                 time.sleep(5)
