@@ -417,7 +417,10 @@ def getData(config):
             time.sleep(sleep_time)  # wait before trying to fetch the data again
             sleep_time *= 2  # Implement your backoff algorithm here i.e. exponential backoff
         else:
+            connectbool=False
             break
+    if connectbool==True:
+        raise ValueError ('Goingecko did not return data five times in a row')
     return allprices, volumes
 
 def makeSpark(allprices):
