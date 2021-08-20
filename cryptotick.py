@@ -343,6 +343,7 @@ def beanaproblem(image,message):
 #   Migrating from the rather dramatic issue screen to drawing attention to the last
 #   update time. The persistent display takes care of the rest.
     image.paste(thealert, (390,123))
+    logging.info(message)
 #   Message as QR code to improve error diagnosis
     return image
 
