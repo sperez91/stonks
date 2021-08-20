@@ -25,6 +25,7 @@ import matplotlib.pyplot as plt
 import currency
 import pandas as pd
 import logging
+import gpiozero
 from fake_useragent import UserAgent
 import decimal
 dirname = os.path.dirname(__file__)
@@ -659,9 +660,26 @@ def listToString(s):
         str1 += ", "+s[i]  
     
     # return string  
-    return str1 
+    return str1     
         
-        
+def togglebutton(display):
+    dims = (display.width, display.height)
+    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+    img.thumbnail(dims)
+    paste_coords = [dims[i] - img.size[i] for i in (0,1)]  # align image with bottom of display
+    logging.info("Reset Pressed, initiate shudown")
+    filename = os.path.join(dirname, 'images/rabbitsq.png')
+    imlogo = Image.open(filename)
+    resize = 300,300
+    imlogo.thumbnail(resize)
+    clear_display(display)
+    img.paste(imlogo,(100, 760))
+    img=img.rotate(180, expand=True)
+    display.frame_buf.paste(img, paste_coords)
+    display.draw_full(constants.DisplayModes.GC16)
+    os.system('sudo halt')
+    return
+
 def main():
     logging.basicConfig(level=logging.DEBUG)
     args = parse_args()
@@ -715,6 +733,9 @@ def main():
         logging.info("Waiting for Internet")
         time.sleep(1)
     lastrefresh = time.time()
+    # Set up the button
+    button = gpiozero.Button(17)
+    button.when_pressed = lambda: togglebutton(display) # Note missing brackets, it's a label
     try:
         while True:
             starttime = time.time()
