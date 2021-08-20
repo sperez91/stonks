@@ -1,9 +1,9 @@
 display:
   inverted: false
   maximalist: true
-  feedurl: https://news.bitcoin.com/feed/
+  feedurl: https://bitcoinmagazine.com/feed 
   vcom: -2.61
-  coinnames: false
+  coinnames: false 
 ticker:
   currency: bitcoin
   exchange: default
