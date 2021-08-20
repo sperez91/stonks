@@ -526,24 +526,30 @@ def updateDisplay(image,config,allprices, volumes):
     if config['display']['maximalist']==True:
         image, success=mempool(image, config)
         d = feedparser.parse(config['display']['feedurl'])
-        print("STORIES:"+str(len(d.entries)))
-        storynum=randrange(len(d.entries)-1)
-        text=d.entries[storynum].title
-#        text=re.sub(r'&uArr; ', '', text)
-        fontstring="JosefinSans-Light"
+        numberofstories=len(d.entries)
+        logstring="STORIES:"+str(numberofstories)
+        logging.info(logstring)
         y_text=45
         height= 100
         width= 37
         fontsize=70
-        image, numline=writewrappedlines(image,text,fontsize,y_text,height, width,fontstring)
-        urlstring=d.entries[storynum].link
-        qr = qrcode.QRCode(version=1,error_correction=qrcode.constants.ERROR_CORRECT_L,box_size=3,border=0,)
-        qr.add_data(urlstring)
-        qr.make(fit=True)
-        theqr = qr.make_image(fill_color="#FFFFFF", back_color="#000000")
-        MAX_SIZE=(150,150)
-        theqr.thumbnail(MAX_SIZE)
-        image.paste(theqr, (1200,880))
+        fontstring="JosefinSans-Light"
+        if numberofstories > 1:
+            storynum=randrange(numberofstories-1)
+            text=d.entries[storynum].title
+            image, numline=writewrappedlines(image,text,fontsize,y_text,height, width,fontstring)
+            urlstring=d.entries[storynum].link
+            qr = qrcode.QRCode(version=1,error_correction=qrcode.constants.ERROR_CORRECT_L,box_size=3,border=0,)
+            qr.add_data(urlstring)
+            qr.make(fit=True)
+            theqr = qr.make_image(fill_color="#FFFFFF", back_color="#000000")
+            MAX_SIZE=(150,150)
+            theqr.thumbnail(MAX_SIZE)
+            image.paste(theqr, (1200,880))
+        else:
+            text="There is an issue with the news feed"
+            image, numline=writewrappedlines(image,text,fontsize,y_text,height, width,fontstring)
+
     return image
 
 
