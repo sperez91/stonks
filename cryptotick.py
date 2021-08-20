@@ -442,7 +442,7 @@ def makeSpark(allprices):
 
         # Save the resulting bmp file to the images directory
         plt.savefig(os.path.join(picdir, key+'spark.png'), dpi=72)
-        plt.cla() # Close plot to prevent memory error
+        plt.clf() # Close plot to prevent memory error
     return
 
 
