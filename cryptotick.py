@@ -445,7 +445,7 @@ def makeSpark(allprices):
 
         # Save the resulting bmp file to the images directory
         plt.savefig(os.path.join(picdir, key+'spark.png'), dpi=72)
-        plt.clf() # Close plot to prevent memory error
+        plt.close('all') # Close plot to prevent memory error
     return
 
 
@@ -685,6 +685,7 @@ def togglebutton(display):
     return
 
 def main():
+
     logging.basicConfig(level=logging.DEBUG)
     args = parse_args()
 
