@@ -37,11 +37,11 @@ Uses code based on the stuff at [btcticker](http://github.com/llvllch/btcticker)
 
 First, clone this repository using
 
-    git clone https://github.com/llvllch/bbq
+    git clone https://github.com/llvllch/stonks
 
 then:
 
-    cd bbq
+    cd stonks
     
 Install the required modules using pip:
 
@@ -50,7 +50,7 @@ Install the required modules using pip:
 
 Run the code using:
 
-    python3 quotey.py
+    python3 crypotick.py
     
 To periodically run the script, set it as a [cronjob](https://opensource.com/article/17/11/how-use-cron-linux) or systemd. Systemd gives better control over restarts etc when the internet isn't playing nicely
 
