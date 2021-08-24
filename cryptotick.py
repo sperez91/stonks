@@ -684,11 +684,12 @@ def togglebutton(display):
 
 def main():
 
-    logging.basicConfig(filename='runlog.log',level=logging.DEBUG)
+    logging.basicConfig(filename="runlog.log",level=logging.DEBUG)
     args = parse_args()
 #   Get the configuration from config.yaml
     with open(configfile) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
+    logging.info("Read Config File")
     logging.info(config)
     if not args.virtual:
         from IT8951.display import AutoEPDDisplay
