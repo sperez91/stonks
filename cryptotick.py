@@ -684,7 +684,7 @@ def togglebutton(display):
 
 def main():
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(filename='runlog.log',level=logging.DEBUG)
     args = parse_args()
 #   Get the configuration from config.yaml
     with open(configfile) as f:
