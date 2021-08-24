@@ -147,14 +147,14 @@ def redditquotes(img, config):
             quote=re.sub("”", "\"", quote)
             string = quote
             count = quote.count("\"")
-            print("Count="+str(count))
+            logging.info("Count="+str(count))
             if count >= 2:
-                print("2 or more quotes - split after last one")
+                logging.info("2 or more quotes - split after last one")
                 sub = "\""
                 wanted = "\" ~"
                 n = count
                 quote=nth_repl(quote, sub, wanted, n)
-                print(quote)
+                logging.info(quote)
 
             else:
                 matchObj = re.search(r"(\.)\s(\w+)$",quote)
@@ -186,7 +186,7 @@ def redditquotes(img, config):
                 source = splitquote[-1]
                 source = source.strip()
                 source = source.strip("-")
-                print(source)
+                logging.info(source)
                 draw = ImageDraw.Draw(img) 
                 draw.line((500,880, 948,880), fill=255, width=3)
     #           _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-Regular"):
@@ -479,7 +479,7 @@ def updateDisplay(image,config,allprices, volumes):
             logging.info("Getting token Image from Image directory")
             tokenimage = Image.open(tokenfilename)
         else:
-            print("Getting token Image from Coingecko")
+           logging.info("Getting token Image from Coingecko")
             tokenimageurl = "https://api.coingecko.com/api/v3/coins/"+whichcoin+"?tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false"
             rawimage = requests.get(tokenimageurl).json()
             tokenimage = Image.open(requests.get(rawimage['image']['large'], stream=True).raw)
@@ -690,7 +690,7 @@ def main():
     if not args.virtual:
         from IT8951.display import AutoEPDDisplay
 
-        print('Initializing EPD...')
+        logging.info('Initializing EPD...')
 
         # here, spi_hz controls the rate of data transfer to the device, so a higher
         # value means faster display refreshes. the documentation for the IT8951 device
@@ -698,7 +698,7 @@ def main():
         # 80 MHz (80000000)
         display = AutoEPDDisplay(vcom=config['display']['vcom'], rotate=args.rotate, spi_hz=24000000)
 
-        print('VCOM set to', display.epd.get_vcom())
+        logging.info('VCOM set to', display.epd.get_vcom())
 
     else:
         from IT8951.display import VirtualEPDDisplay
@@ -726,7 +726,7 @@ def main():
     fiat_list = [x.strip(' ') for x in fiat_list]
 
     if len(fiat_list)!=len(curr_list):
-        print ("Fiat and Crypto lists differ in length. Using first fiat entry only")
+        logging.info ("Fiat and Crypto lists differ in length. Using first fiat entry only")
         fiat=fiat_list[0]
         fiat_list = [fiat] * len(curr_list)
 
