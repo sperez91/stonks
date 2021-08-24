@@ -765,21 +765,24 @@ def main():
                     configsubset['ticker']['fiatcurrency']=listToString(fiatlist[i])                   
                     img, success = eval(thefunction+"(img,configsubset)")
                     display_image_8bpp(display,img, config)
-                    lastrefresh=time.time()
-                    diff = (lastrefresh - starttime)
-                    sleepfor = max(1,updatefrequency-int(diff))
-                    sleepstring = str("Sleeping for: "+str(sleepfor)+" seconds")
-                    logging.info(sleepstring)
-                    time.sleep(sleepfor)
-                datapulled = success         
+                    if success==True:                    
+                        lastrefresh=time.time()
+                        diff = (lastrefresh - starttime)
+                        sleepfor = max(1,updatefrequency-int(diff))
+                        sleepstring = str("Got data. Sleeping for: "+str(sleepfor)+" seconds")
+                        logging.info(sleepstring)
+                        time.sleep(sleepfor)
+                    else:
+                        sleepfor = 5
+                        sleepstring = str("Data Pull Issues. Sleeping for: "+str(sleepfor)+" seconds")
+                        time.sleep(sleepfor)
             else:
                 starttime = time.time()
                 img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
                 img, success = eval(thefunction+"(img,config)")
                 display_image_8bpp(display,img, config)
-                datapulled = success
                 lastrefresh=time.time()
-                if datapulled==True:
+                if success ==True:
                     diff = (lastrefresh - starttime)
                     # Sleep for update frequency, minus processing time
                     sleepfor = max(1,updatefrequency-int(diff))
