@@ -43,7 +43,7 @@ def mempool(img, config):
 
 def wordaday(img, config):
     try:
-        print("get word a day")
+        logging.info("get word a day")
         filename = os.path.join(dirname, 'images/rabbitsq.png')
         imlogo = Image.open(filename)
         resize = 300,300
@@ -72,10 +72,6 @@ def wordaday(img, config):
         time.sleep(10)
     return img, success
 
-def socialmetrics(img, config):
-    print("get social metrics")
-    return img
-
 def textfilequotes(img, config):
     success=False
     filename = os.path.join(dirname, 'images/rabbitsq.png')
@@ -85,10 +81,10 @@ def textfilequotes(img, config):
     img.paste(imlogo,(100, 760))
     # Grab The contents of the quotes file, "quotes.csv"
     data=pd.read_csv(quotesfile, sep='\t')
-    print(data.head())
+    logging.info(data.head())
     while True:
         choose=data.sample(replace=True)
-        print(choose)
+        logging.info(choose)
         quote=choose.iat[0,0]
         source=choose.iat[0,1]
         try:
@@ -117,7 +113,7 @@ def textfilequotes(img, config):
 
 def redditquotes(img, config):
     try:
-        print("get reddit quotes")
+        logging.info("get reddit quotes")
         filename = os.path.join(dirname, 'images/rabbitsq.png')
         imlogo = Image.open(filename)
         resize = 300,300
@@ -132,9 +128,9 @@ def redditquotes(img, config):
                 quotestack.append(str(rawquotes['data']['children'][i]['data']['title']))
                 i+=1
             for key in rawquotes.keys():
-                print(key)
+                logging.info(key)
         except:
-            print('Reddit Does Not Like You')
+            logging.info('Reddit Does Not Like You')
 
     #   Tidy quotes
         i=0
@@ -207,7 +203,7 @@ def redditquotes(img, config):
 
 def newyorkercartoon(img, config):
     try:
-        print("Get a Cartoon")
+        logging.info("Get a Cartoon")
         d = feedparser.parse('https://www.newyorker.com/feed/cartoons/daily-cartoon')
         caption=d.entries[0].summary
         imagedeets = d.entries[0].media_thumbnail[0]
@@ -233,7 +229,7 @@ def newyorkercartoon(img, config):
 
 def guardianheadlines(img, config):
     try:
-        print("Get the Headlines")
+        logging.info("Get the Headlines")
         filenameaudrey = os.path.join(dirname, 'images/rabbitsq.png')
         imlogoaud = Image.open(filenameaudrey)
         resize = 300,300
@@ -334,7 +330,7 @@ def print_system_info(display):
 
 
 def clear_display(display):
-    print('Clearing display...')
+    logging.info('Clearing display...')
     display.clear()
 
 def beanaproblem(image,message):
@@ -371,7 +367,7 @@ def getData(config):
     for x in range(0, num_retries):  
         # Get the price
         for i in range(len(crypto_list)):
-            print("i="+str(i))
+            logging.info("i="+str(i))
             fiat=fiat_list[i]
             whichcoin=crypto_list[i]
             logging.info(whichcoin)
@@ -684,7 +680,7 @@ def togglebutton(display):
 
 def main():
 
-    logging.basicConfig(filename="runlog.log",level=logging.DEBUG)
+    logging.basicConfig(filename=os.path.join(dirname,"runlog.log"),level=logging.DEBUG)
     args = parse_args()
 #   Get the configuration from config.yaml
     with open(configfile) as f:
