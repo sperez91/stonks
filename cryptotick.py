@@ -679,8 +679,8 @@ def togglebutton(display):
     return
 
 def main():
-
-    logging.basicConfig(filename=os.path.join(dirname,"runlog.log"),level=logging.DEBUG)
+#   If we log to a file, we will need to set up log rotation, so for now it goes to /var/log/syslog
+    logging.basicConfig(level=logging.DEBUG)
     args = parse_args()
 #   Get the configuration from config.yaml
     with open(configfile) as f:
