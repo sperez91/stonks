@@ -479,7 +479,7 @@ def updateDisplay(image,config,allprices, volumes):
             logging.info("Getting token Image from Image directory")
             tokenimage = Image.open(tokenfilename)
         else:
-           logging.info("Getting token Image from Coingecko")
+            logging.info("Getting token Image from Coingecko")
             tokenimageurl = "https://api.coingecko.com/api/v3/coins/"+whichcoin+"?tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false"
             rawimage = requests.get(tokenimageurl).json()
             tokenimage = Image.open(requests.get(rawimage['image']['large'], stream=True).raw)
