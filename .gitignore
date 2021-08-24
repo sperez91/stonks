@@ -130,3 +130,6 @@ dmypy.json
 
 # Config file to prevent overwrite on update
 config.yaml
+
+# Log file
+runlog.log
