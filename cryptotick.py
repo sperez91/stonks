@@ -279,7 +279,7 @@ def crypto(img, config):
         logging.info("FULL UPDATE")
         allprices, volumes=getData(config)
         # generate sparkline
-        print("SPARKLINES")
+        logging.info("SPARKLINES")
         makeSpark(allprices)
         logging.info("NOW DISPLAY")
         # update display
@@ -343,7 +343,7 @@ def beanaproblem(image,message):
 #   Migrating from the rather dramatic issue screen to drawing attention to the last
 #   update time. The persistent display takes care of the rest.
     image.paste(thealert, (390,123))
-    logging.info(message)
+    logging.info(str("Error message: " + message))
 #   Message as QR code to improve error diagnosis
     return image
 
@@ -387,7 +387,6 @@ def getData(config):
             volumenow = float(liveprice['total_volume'])
             logging.info("Got Live Data From CoinGecko")
             geckourlhistorical = "https://api.coingecko.com/api/v3/coins/"+whichcoin+"/market_chart/range?vs_currency="+fiat+"&from="+str(starttimeseconds)+"&to="+str(endtimeseconds)
-            #logging.info(geckourlhistorical)
             time.sleep(3) # a little polite pause to avoid upsetting coingecko
             try:
                 rawtimeseries = requests.get(geckourlhistorical,headers=header).json()
@@ -406,7 +405,7 @@ def getData(config):
                 i+=1
             timeseriesstack.append(pricenow)
             allprices[str(whichcoin+fiat)] = timeseriesstack
-            logging.info(str(whichcoin+fiat))
+            logging.info(str("Crypto fiat combo: "+whichcoin+fiat))
             volstring=str(str(whichcoin+fiat)+"volume")
             volumes[volstring]=volumenow
             time.sleep(3)
@@ -427,7 +426,7 @@ def makeSpark(allprices):
     # Draw and save the sparkline that represents historical data
 
     # Subtract the mean from the sparkline to make the mean appear on the plot (it's really the x axis)    
-    logging.info("Update Sparks")    
+    logging.info("Update Sparkline graphs")    
     for key in allprices.keys():   
         logging.info(key)    
         x = allprices[key]-np.mean(allprices[key])
@@ -452,10 +451,9 @@ def makeSpark(allprices):
 def updateDisplay(image,config,allprices, volumes):
     """   
     Takes the price data, the desired coin/fiat combo along with the config info for formatting
-    if config is re-written following adustment we could avoid passing the last two arguments as
+    if config is re-written following adjustment we could avoid passing the last two arguments as
     they will just be the first two items of their string in config 
     """
-    logging.info("Update Display")
     crypto_list = currencystringtolist(config['ticker']['currency'])
     fiat_list=currencystringtolist(config['ticker']['fiatcurrency'])
 
@@ -465,7 +463,7 @@ def updateDisplay(image,config,allprices, volumes):
     heightincrement=int(295*scaling)
     index=0
     for key in allprices.keys():
-        logging.info(key)
+        logging.info(str("Price: "+ key))
         pricenow = allprices[key][-1]
         fiat=fiat_list[index]
         if fiat=="jpy":
@@ -626,7 +624,7 @@ def display_image_8bpp(display, img, config):
     return
 
 def parse_args():
-    p = argparse.ArgumentParser(description='Test EPD functionality')
+    p = argparse.ArgumentParser(description='Test EPD functionality')   
     p.add_argument('-v', '--virtual', action='store_true',
                    help='display using a Tkinter window instead of the '
                         'actual e-paper device (for testing without a '
@@ -688,10 +686,10 @@ def main():
 
     logging.basicConfig(level=logging.DEBUG)
     args = parse_args()
-
+#   Get the configuration from config.yaml
     with open(configfile) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-
+    logging.info(config)
     if not args.virtual:
         from IT8951.display import AutoEPDDisplay
 
@@ -719,19 +717,29 @@ def main():
     my_list = currencystringtolist(config['function']['mode'])
     weightstring = currencystringtolist(config['function']['weight'])
     weights = [int(i) for i in weightstring]
-    print(my_list)
-    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-#   Get the configuration from config.yaml
+
+#   Turn the strings for fiat currency and crypto currency into something we can work with
+
     curr_string = config['ticker']['currency']
     curr_list = curr_string.split(",")
     curr_list = [x.strip(' ') for x in curr_list]
+
+    fiat_string = config['ticker']['fiatcurrency']
+    fiat_list = fiat_string.split(",")
+    fiat_list = [x.strip(' ') for x in fiat_list]
+
+    if len(fiat_list)!=len(curr_list):
+        print ("Fiat and Crypto lists differ in length. Using first fiat entry only")
+        fiat=fiat_list[0]
+        fiat_list = [fiat] * len(curr_list)
+
     if config['display']['maximalist']==True:
             config['ticker']['currency']=curr_list [0]
     datapulled=False
 #   Update frequency sanity check
-    if float(config['ticker']['updatefrequency'])<180:
-        logging.info("Throttling update frequency to 180 seconds")  
-        updatefrequency=180.0
+    if float(config['ticker']['updatefrequency'])<60:
+        logging.info("Throttling update frequency to 60 seconds")  
+        updatefrequency=60.0
     else:
         updatefrequency=float(config['ticker']['updatefrequency'])
     while internet()==False:
@@ -743,34 +751,41 @@ def main():
     button.when_pressed = lambda: togglebutton(display) # Note missing brackets, it's a label
     try:
         while True:
-            starttime = time.time()
-            img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
             thefunction=random.choices(my_list, weights=weights, k=1)[0]
-            if thefunction=="crypto" and len(curr_list)>=4 and config['display']['maximalist']!=True:
-                #Coins Per Screen (Consider moving to Config file)
-                numperpage=config['ticker']['coinsperpage']
+            numperpage=config['ticker']['coinsperpage']
+            if thefunction=="crypto" and len(curr_list)>numperpage and config['display']['maximalist']!=True:                
                 chunkslist=list(chunks(curr_list,numperpage))
-                for i in chunkslist:
+                fiatlist=list(chunks(fiat_list,numperpage))
+                length = len(chunkslist)              
+                for i in range(length):
+                    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+                    starttime = time.time()
                     configsubset = config
-                    configsubset['ticker']['currency']=listToString(i)
+                    configsubset['ticker']['currency']=listToString(chunkslist[i])
+                    configsubset['ticker']['fiatcurrency']=listToString(fiatlist[i])                   
                     img, success = eval(thefunction+"(img,configsubset)")
                     display_image_8bpp(display,img, config)
-                    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
                     lastrefresh=time.time()
+                    diff = (lastrefresh - starttime)
+                    sleepfor = max(1,updatefrequency-int(diff))
+                    sleepstring = str("Sleeping for: "+str(sleepfor)+" seconds")
+                    logging.info(sleepstring)
+                    time.sleep(sleepfor)
                 datapulled = success         
             else:
+                starttime = time.time()
+                img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
                 img, success = eval(thefunction+"(img,config)")
                 display_image_8bpp(display,img, config)
                 datapulled = success
                 lastrefresh=time.time()
-            endtime = time.time()
-            if datapulled==True:
-                diff = (endtime - starttime)
-                # Sleep for update frequency, minus processing time
-                sleepfor = max(1,updatefrequency-int(diff))
-                time.sleep(sleepfor)
-            else:
-                time.sleep(5)
+                if datapulled==True:
+                    diff = (lastrefresh - starttime)
+                    # Sleep for update frequency, minus processing time
+                    sleepfor = max(1,updatefrequency-int(diff))
+                    time.sleep(sleepfor)
+                else:
+                    time.sleep(5)
     except Exception as e:
         logging.error(e)
         img=beanaproblem(img,str(e)+" Line: "+str(e.__traceback__.tb_lineno))
