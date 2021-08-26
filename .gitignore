@@ -133,3 +133,4 @@ config.yaml
 
 # Log file
 runlog.log
+.zshrc
