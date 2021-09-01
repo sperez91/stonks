@@ -755,12 +755,14 @@ def main():
                 fiatlist=list(chunks(fiat_list,numperpage))
                 length = len(chunkslist)              
                 for i in range(length):
-                    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+                    imgnew = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
                     starttime = time.time()
                     configsubset = config
                     configsubset['ticker']['currency']=listToString(chunkslist[i])
                     configsubset['ticker']['fiatcurrency']=listToString(fiatlist[i])                   
-                    img, success = eval(thefunction+"(img,configsubset)")
+                    imgnew, success = eval(thefunction+"(imgnew,configsubset)")
+                    if success==True:
+                        img= imgnew
                     display_image_8bpp(display,img, config)
                     if success==True:                    
                         lastrefresh=time.time()
@@ -775,8 +777,10 @@ def main():
                         time.sleep(sleepfor)
             else:
                 starttime = time.time()
-                img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-                img, success = eval(thefunction+"(img,config)")
+                imgnew = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+                imgnew, success = eval(thefunction+"(imgnew,config)")
+                if success==True:
+                    img=imgnew
                 display_image_8bpp(display,img, config)
                 lastrefresh=time.time()
                 if success ==True:
