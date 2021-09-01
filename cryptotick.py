@@ -746,6 +746,7 @@ def main():
     # Set up the button
     button = gpiozero.Button(17)
     button.when_pressed = lambda: togglebutton(display) # Note missing brackets, it's a label
+    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
     try:
         while True:
             thefunction=random.choices(my_list, weights=weights, k=1)[0]
