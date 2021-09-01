@@ -729,6 +729,7 @@ def main():
         logging.info ("Fiat and Crypto lists differ in length. Using first fiat entry only")
         fiat=fiat_list[0]
         fiat_list = [fiat] * len(curr_list)
+        config['ticker']['fiatcurrency']=listToString(fiat_list)
 
     if config['display']['maximalist']==True:
             config['ticker']['currency']=curr_list [0]
@@ -747,6 +748,7 @@ def main():
     button = gpiozero.Button(17)
     button.when_pressed = lambda: togglebutton(display) # Note missing brackets, it's a label
     img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+    display_image_8bpp(display,img, config)
     try:
         while True:
             thefunction=random.choices(my_list, weights=weights, k=1)[0]
