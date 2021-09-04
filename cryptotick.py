@@ -23,7 +23,7 @@ import socket
 import numpy as np
 import matplotlib.pyplot as plt
 import currency
-import pandas as pd
+#import pandas as pd
 import logging
 import gpiozero
 from fake_useragent import UserAgent
