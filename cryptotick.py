@@ -23,7 +23,6 @@ import socket
 import numpy as np
 import matplotlib.pyplot as plt
 import currency
-#import pandas as pd
 import logging
 import gpiozero
 from fake_useragent import UserAgent
@@ -73,6 +72,7 @@ def wordaday(img, config):
     return img, success
 
 def textfilequotes(img, config):
+    import pandas as pd
     success=False
     filename = os.path.join(dirname, 'images/rabbitsq.png')
     imlogo = Image.open(filename)
