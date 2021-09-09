@@ -698,7 +698,7 @@ def main():
         # 80 MHz (80000000)
         display = AutoEPDDisplay(vcom=config['display']['vcom'], rotate=args.rotate, spi_hz=24000000)
 
-        logging.info('VCOM set to', display.epd.get_vcom())
+        logging.info('VCOM set to', str(display.epd.get_vcom()[0]))
 
     else:
         from IT8951.display import VirtualEPDDisplay
