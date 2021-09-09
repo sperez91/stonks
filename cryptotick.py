@@ -745,7 +745,7 @@ def main():
         time.sleep(1)
     # Set timezone based on ip address
     try:
-        os.system("sudo /home/pi/.local/bin/tzupdate")
+        os.system("sudo /usr/local/bin/tzupdate")
     except:
         logging.info("Timezone Not Set")
     lastrefresh = time.time()
