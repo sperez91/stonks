@@ -35,8 +35,9 @@ Uses code based on the stuff at [btcticker](http://github.com/llvllch/btcticker)
 # Installation
 
 
-First, clone this repository using
+First, enable spi and clone this repository using
 
+    sudo raspi-config nonint do_spi 0
     git clone https://github.com/llvllch/stonks
 
 then:
