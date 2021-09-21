@@ -678,6 +678,35 @@ def togglebutton(display):
     os.system('sudo halt')
     return
 
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
+def display_startup(display):
+    dims = (display.width, display.height)
+    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+    img.thumbnail(dims)
+    paste_coords = [dims[i] - img.size[i] for i in (0,1)]  # align image with bottom of display
+    # set frame buffer to gradient
+    ssid=os.popen("sudo iwgetid -r").read()
+    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+    _place_text(img, 'WiFi: '+ ssid, x_offset=0, y_offset=-300,fontsize=50,fontstring="Roboto-Light")
+    _place_text(img, 'IP: '+ get_ip(), x_offset=0, y_offset=-240,fontsize=50,fontstring="Roboto-Light")
+    # update display
+    img=img.rotate(180, expand=True)
+    display.frame_buf.paste(img, paste_coords)
+    display.draw_full(constants.DisplayModes.GC16)
+
+
+
 def main():
 #   If we log to a file, we will need to set up log rotation, so for now it goes to /var/log/syslog
     logging.basicConfig(level=logging.DEBUG)
@@ -752,8 +781,7 @@ def main():
     # Set up the button
     button = gpiozero.Button(17)
     button.when_pressed = lambda: togglebutton(display) # Note missing brackets, it's a label
-    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-    display_image_8bpp(display,img, config)
+    display_startup(display)
     try:
         while True:
             thefunction=random.choices(my_list, weights=weights, k=1)[0]
