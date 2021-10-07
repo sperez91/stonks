@@ -1,0 +1,16 @@
+display:
+  inverted: false
+  maximalist: false
+  feedurl: https://bitcoinmagazine.com/feed 
+  vcom: -1.61
+  coinnames: false 
+ticker:
+  currency: bitcoin, ethereum
+  exchange: default
+  fiatcurrency: cad
+  updatefrequency: 600
+  sparklinedays: 30
+  coinsperpage: 2
+function: 
+  mode: crypto,redditquotes, wordaday, newyorkercartoon, guardianheadlines, textfilequotes
+  weight: 1, 0, 0, 0, 0, 0

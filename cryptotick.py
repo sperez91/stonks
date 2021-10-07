@@ -5,6 +5,7 @@ import PIL
 from PIL import Image, ImageDraw, ImageFont,  ImageOps
 from sys import path
 from IT8951 import constants
+from IT8951 import constants
 import matplotlib 
 matplotlib.use('Agg')
 import os, random
@@ -43,24 +44,24 @@ def mempool(img, config):
 def wordaday(img, config):
     try:
         logging.info("get word a day")
-        filename = os.path.join(dirname, 'images/rabbitsq.png')
+        filename = os.path.join(dirname, 'images/fsociety01.jpg')
         imlogo = Image.open(filename)
-        resize = 300,300
+        resize = 390,390
         imlogo.thumbnail(resize)
         d = feedparser.parse('https://wordsmith.org/awad/rss1.xml')
         wad = d.entries[0].title
         fontstring="Forum-Regular"
         y_text=-200
-        height= 110
-        width= 27
+        height= 143
+        width= 35
         fontsize=180
         img, numline=writewrappedlines(img,wad,fontsize,y_text,height, width,fontstring)
         img.paste(imlogo,(100, 760))
         wadsummary= d.entries[0].summary
         fontstring="GoudyBookletter1911-Regular"
         y_text=0
-        height= 80
-        width= 40
+        height= 104
+        width= 52
         fontsize=70
         img, numline=writewrappedlines(img,wadsummary,fontsize,y_text,height, width,fontstring)
         success=True
@@ -74,9 +75,9 @@ def wordaday(img, config):
 def textfilequotes(img, config):
     import pandas as pd
     success=False
-    filename = os.path.join(dirname, 'images/rabbitsq.png')
+    filename = os.path.join(dirname, 'images/fsociety01.jpg')
     imlogo = Image.open(filename)
-    resize = 300,300
+    resize = 390,390
     imlogo.thumbnail(resize)
     img.paste(imlogo,(100, 760))
     # Grab The contents of the quotes file, "quotes.csv"
@@ -92,8 +93,8 @@ def textfilequotes(img, config):
             if  len(source)<=25:
                 fontstring = "JosefinSans-Light"
                 y_text= -300
-                height= 90
-                width= 33
+                height= 117
+                width= 43
                 fontsize=80
                 img, numline =writewrappedlines(img,quote,fontsize,y_text,height, width,fontstring)
                 draw = ImageDraw.Draw(img) 
@@ -114,9 +115,9 @@ def textfilequotes(img, config):
 def redditquotes(img, config):
     try:
         logging.info("get reddit quotes")
-        filename = os.path.join(dirname, 'images/rabbitsq.png')
+        filename = os.path.join(dirname, 'images/fsociety01.jpg')
         imlogo = Image.open(filename)
-        resize = 300,300
+        resize = 390,390
         imlogo.thumbnail(resize)
         quoteurl = 'https://www.reddit.com/r/quotes/top/.json?t=week&limit=100'
         rawquotes = requests.get(quoteurl,headers={'User-agent': 'Chrome'}).json()
@@ -179,8 +180,8 @@ def redditquotes(img, config):
                 img.paste(imlogo,(100, 760))
                 fontstring = "JosefinSans-Light"
                 y_text= -300
-                height= 110
-                width= 37
+                height= 143
+                width= 48
                 fontsize=60
                 img, numline =writewrappedlines(img,quote,fontsize,y_text,height, width,fontstring)
                 source = splitquote[-1]
@@ -208,15 +209,15 @@ def newyorkercartoon(img, config):
         caption=d.entries[0].summary
         imagedeets = d.entries[0].media_thumbnail[0]
         imframe = Image.open(requests.get(imagedeets['url'], stream=True).raw)
-        resize = 1200,800
+        resize = 1560,1040
         imframe.thumbnail(resize, Image.ANTIALIAS)
         imwidth, imheight = imframe.size
-        xvalue= int(1448/2-imwidth/2)
+        xvalue= int(1872/2-imwidth/2)
         img.paste(imframe,(xvalue, 75))
         fontstring="Forum-Regular"
         y_text= 390
-        height= 50
-        width= 50
+        height= 65
+        width= 65
         fontsize=60
         img, numline=writewrappedlines(img,caption,fontsize,y_text,height, width,fontstring)
         success=True
@@ -230,23 +231,23 @@ def newyorkercartoon(img, config):
 def guardianheadlines(img, config):
     try:
         logging.info("Get the Headlines")
-        filenameaudrey = os.path.join(dirname, 'images/rabbitsq.png')
+        filenameaudrey = os.path.join(dirname, 'images/fsociety01.jpg')
         imlogoaud = Image.open(filenameaudrey)
-        resize = 300,300
+        resize = 390,390
         imlogoaud.thumbnail(resize)
 
         d = feedparser.parse('https://www.theguardian.com/uk/rss')
         filename = os.path.join(dirname, 'images/guardianlogo.jpg')
         imlogo = Image.open(filename)
-        resize = 800,150
+        resize = 1040,195
         imlogo.thumbnail(resize)
-        img.paste(imlogo,(100, 100))
-        img.paste(imlogoaud,(100, 760))
+        img.paste(imlogo,(130, 130))
+        img.paste(imlogoaud,(130, 988))
         text=d.entries[0].title
         fontstring="Merriweather-Light"
         y_text=-200
-        height= 140
-        width= 27
+        height= 182
+        width= 35
         fontsize=90
         img, numlines=writewrappedlines(img,text,fontsize,y_text,height, width,fontstring)
         urlstring=d.entries[0].link
@@ -254,9 +255,9 @@ def guardianheadlines(img, config):
         qr.add_data(urlstring)
         qr.make(fit=True)
         theqr = qr.make_image(fill_color="#FFFFFF", back_color="#000000")
-        MAX_SIZE=(150,150)
+        MAX_SIZE=(195,195)
         theqr.thumbnail(MAX_SIZE)
-        img.paste(theqr, (1200,930))
+        img.paste(theqr, (1560,1209))
         success=True
     except Exception as e:
         message="Interlude due to a data pull/print problem (Headlines)"
@@ -338,7 +339,7 @@ def beanaproblem(image,message):
     thealert = Image.open(os.path.join(picdir,'arrow.png'))
 #   Migrating from the rather dramatic issue screen to drawing attention to the last
 #   update time. The persistent display takes care of the rest.
-    image.paste(thealert, (390,123))
+    image.paste(thealert, (507,160))
     logging.info(str("Error message: " + message))
 #   Message as QR code to improve error diagnosis
     return image
@@ -439,7 +440,7 @@ def makeSpark(allprices):
         ax.axhline(c='k', linewidth=2, linestyle=(0, (5, 2, 1, 2)))
 
         # Save the resulting bmp file to the images directory
-        plt.savefig(os.path.join(picdir, key+'spark.png'), dpi=72)
+        plt.savefig(os.path.join(picdir, key+'spark.png'), dpi=90)
         plt.close('all') # Close plot to prevent memory error
     return
 
@@ -455,8 +456,8 @@ def updateDisplay(image,config,allprices, volumes):
 
     days_ago=int(config['ticker']['sparklinedays'])   
     scaling=3/(config['ticker']['coinsperpage'])
-    height=int(150*scaling)
-    heightincrement=int(295*scaling)
+    height=int(195*scaling)
+    heightincrement=int(383*scaling)
     index=0
     for key in allprices.keys():
         logging.info(str("Price: "+ key))
@@ -488,11 +489,11 @@ def updateDisplay(image,config,allprices, volumes):
                 #PIL doesnt like to invert binary images, so convert to RGB, invert and then convert back to RGBA
                 tokenimage = ImageOps.invert( tokenimage.convert('RGB') )
                 tokenimage = tokenimage.convert('RGBA')
-            new_image = Image.new("RGBA", (290,290), "WHITE") # Create a white rgba background with a 10 pixel border
-            new_image.paste(tokenimage, (20, 20), tokenimage)   
+            new_image = Image.new("RGBA", (377,377), "WHITE") # Create a white rgba background with a 10 pixel border
+            new_image.paste(tokenimage, (26, 26), tokenimage)   
             tokenimage=new_image
             tokenimage.save(tokenfilename)
-        newsize=(200,200)
+        newsize=(260,260)
         tokenimage.thumbnail(newsize,Image.ANTIALIAS)
         pricechange = str("%+d" % round((allprices[key][-1]-allprices[key][0])/allprices[key][-1]*100,2))+"%"
         d = decimal.Decimal(str(pricenow)).as_tuple().exponent
@@ -503,34 +504,34 @@ def updateDisplay(image,config,allprices, volumes):
         else:
             pricenowstring ="{:.5g}".format(pricenow)
         draw = ImageDraw.Draw(image)   
-        image.paste(sparkpng, (705,height+40))
-        image.paste(tokenimage, (85,height+30))
+        image.paste(sparkpng, (1000,height+52))
+        image.paste(tokenimage, (50,height+33))
         text=symbolstring+pricenowstring
         logging.info(symbolstring)
         if len(text)>7:
-            pricefontsize=120
+            pricefontsize=80
         else:
-            pricefontsize=130
-        _place_text(image, text, x_offset=-175, y_offset=height-420,fontsize=pricefontsize,fontstring="Roboto-Light")
+            pricefontsize=90
+        _place_text(image, text, x_offset=-240, y_offset=height-550,fontsize=pricefontsize,fontstring="PressStart2P-Regular")
         vol = human_format(volumes[key+"volume"])
         text=pricechange + " vol:" + symbolstring + vol
-        _place_text(image, text, x_offset=-175, y_offset=height-310,fontsize=50,fontstring="Roboto-Light")
+        _place_text(image, text, x_offset=-240, y_offset=height-460,fontsize=35,fontstring="PressStart2P-Regular")
         if 'coinnames' in config['display'] and config['display']['coinnames']:
-            _place_text(image, whichcoin, x_offset=-175, y_offset=height-500,fontsize=50,fontstring="Roboto-Light")
+            _place_text(image, whichcoin, x_offset=-175, y_offset=height-500,fontsize=30,fontstring="PressStart2P-Regular")
             logging.info("names")
         height += heightincrement
         index += 1
     text=str(time.strftime("%-I:%M %p, %-d %b %Y"))
-    _place_text(image, "Updated: "+text+". "+str(days_ago)+" day data", x_offset=-25, y_offset=-430,fontsize=50,fontstring="JosefinSans-Medium")
+    _place_text(image, "Updated: "+text+". "+str(days_ago)+" day data", x_offset=-20, y_offset=-550,fontsize=38,fontstring="PressStart2P-Regular")
     if config['display']['maximalist']==True:
         image, success=mempool(image, config)
         d = feedparser.parse(config['display']['feedurl'])
         numberofstories=len(d.entries)
         logstring="STORIES:"+str(numberofstories)
         logging.info(logstring)
-        y_text=45
-        height= 100
-        width= 37
+        y_text=58
+        height= 130
+        width= 48
         fontsize=70
         fontstring="JosefinSans-Light"
         if numberofstories > 1:
@@ -542,9 +543,9 @@ def updateDisplay(image,config,allprices, volumes):
             qr.add_data(urlstring)
             qr.make(fit=True)
             theqr = qr.make_image(fill_color="#FFFFFF", back_color="#000000")
-            MAX_SIZE=(150,150)
+            MAX_SIZE=(195,195)
             theqr.thumbnail(MAX_SIZE)
-            image.paste(theqr, (1200,880))
+            image.paste(theqr, (1560,1144))
         else:
             text="There is an issue with the news feed"
             image, numline=writewrappedlines(image,text,fontsize,y_text,height, width,fontstring)
@@ -580,7 +581,7 @@ def _place_text(img, text, x_offset=0, y_offset=0,fontsize=40,fontstring="Forum-
 
     draw.text((draw_x, draw_y), text, font=font,fill=(0,0,0) )
 
-def writewrappedlines(img,text,fontsize,y_text=0,height=60, width=15,fontstring="Forum-Regular"):
+def writewrappedlines(img,text,fontsize,y_text=0,height=78, width=19,fontstring="Forum-Regular"):
     lines = textwrap.wrap(text, width)
     numoflines=0
     for line in lines:
@@ -662,20 +663,20 @@ def listToString(s):
         
 def togglebutton(display):
     dims = (display.width, display.height)
-    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+    img = Image.new("RGB", (1872, 1404), color = (255, 255, 255) )
     img.thumbnail(dims)
     paste_coords = [dims[i] - img.size[i] for i in (0,1)]  # align image with bottom of display
     logging.info("Reset Pressed, initiate shudown")
-    filename = os.path.join(dirname, 'images/rabbitsq.png')
+    filename = os.path.join(dirname, 'images/fsociety01.jpg')
     imlogo = Image.open(filename)
-    resize = 300,300
+    resize = 600,600
     imlogo.thumbnail(resize)
     clear_display(display)
-    img.paste(imlogo,(100, 760))
+    img.paste(imlogo,(600, 410))
     img=img.rotate(180, expand=True)
     display.frame_buf.paste(img, paste_coords)
     display.draw_full(constants.DisplayModes.GC16)
-    os.system('sudo halt')
+    os.system("python3 /home/pi/stonks/cryptotick.py")
     return
 
 def get_ip():
@@ -692,14 +693,14 @@ def get_ip():
 
 def display_startup(display):
     dims = (display.width, display.height)
-    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+    img = Image.new("RGB", (1872, 1404), color = (255, 255, 255) )
     img.thumbnail(dims)
     paste_coords = [dims[i] - img.size[i] for i in (0,1)]  # align image with bottom of display
     # set frame buffer to gradient
     ssid=os.popen("sudo iwgetid -r").read()
-    img = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
-    _place_text(img, 'WiFi: '+ ssid, x_offset=0, y_offset=-300,fontsize=50,fontstring="Roboto-Light")
-    _place_text(img, 'IP: '+ get_ip(), x_offset=0, y_offset=-240,fontsize=50,fontstring="Roboto-Light")
+    img = Image.new("RGB", (1872, 1404), color = (255, 255, 255) )
+    _place_text(img, 'WiFi: '+ ssid, x_offset=0, y_offset=-110,fontsize=50,fontstring="PressStart2P-Regular")
+    _place_text(img, 'IP: '+ get_ip(), x_offset=-25, y_offset=-30,fontsize=50,fontstring="PressStart2P-Regular")
     # update display
     img=img.rotate(180, expand=True)
     display.frame_buf.paste(img, paste_coords)
@@ -731,7 +732,7 @@ def main():
 
     else:
         from IT8951.display import VirtualEPDDisplay
-        display = VirtualEPDDisplay(dims=(1448, 1072), rotate=args.rotate)
+        display = VirtualEPDDisplay(dims=(1872, 1404), rotate=args.rotate)
 
     if not args.error:
         pass
@@ -791,7 +792,7 @@ def main():
                 fiatlist=list(chunks(fiat_list,numperpage))
                 length = len(chunkslist)              
                 for i in range(length):
-                    imgnew = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+                    imgnew = Image.new("RGB", (1872, 1404), color = (255, 255, 255) )
                     starttime = time.time()
                     configsubset = config
                     configsubset['ticker']['currency']=listToString(chunkslist[i])
@@ -813,7 +814,7 @@ def main():
                         time.sleep(sleepfor)
             else:
                 starttime = time.time()
-                imgnew = Image.new("RGB", (1448, 1072), color = (255, 255, 255) )
+                imgnew = Image.new("RGB", (1872, 1404), color = (255, 255, 255) )
                 imgnew, success = eval(thefunction+"(imgnew,config)")
                 if success==True:
                     img=imgnew
